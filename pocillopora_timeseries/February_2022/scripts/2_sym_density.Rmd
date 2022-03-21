@@ -1,0 +1,86 @@
+---
+title: "Symbiont density analysis"
+output: html_document
+---
+
+#Title: Protein Data
+#Project: E5
+#Author: HM Putnam 
+#Edited by: HM Putnam
+#Date Last Modified: 20191104
+#See Readme file for details
+
+```{r setup, include = FALSE}
+## install packages if you dont already have them
+if (!require("tidyverse")) install.packages("tidyverse")
+
+# load packages
+library(tidyverse)
+```
+
+# Import data
+```{r} 
+# Cell count data
+sym_counts <- read_csv("February_2022/data/3_sym_counts/3_sym_counts_data.csv")
+
+# Surface area data
+sa <- read.csv("February_2022/output/3_surface.area.calc.csv")
+
+# Tissue homogenate volume data
+homog_vols <- read_csv("February_2022/data/3_homogenate_vols/3_homogenate_vols.csv") %>% select(1:3)
+
+# Coral sample metadata
+metadata <- read_csv("February_2022/3_corals_sampled.csv") %>% select(1:4)
+
+# Join homogenate volumes and surface area with sample metadata
+metadata <- full_join(metadata, homog_vols)  %>%
+  full_join(sa)
+
+```
+
+# Calculate cells per square centimeter
+```{r}
+# Calculate mean counts for each sample
+sym_counts <- sym_counts %>%
+  select(colony_id, Squares.Counted, matches("Count[0-9]")) %>%
+  gather("rep", "count", -colony_id, -Squares.Counted) %>%
+  group_by(colony_id, Squares.Counted) %>%
+  summarise(mean_count = mean(count, na.rm = TRUE))
+
+# Join mean counts with sample metadata
+sym_counts <- full_join(sym_counts, metadata)
+
+# Normalize counts by homogenat volume and surface area
+sym_counts <- sym_counts %>%
+  mutate(cells.mL = mean_count * 10000 / Squares.Counted,
+         cells = cells.mL * homog_vol_ml,
+         cells.cm2 = cells / surface.area.cm2)
+```
+
+
+
+# Plot data
+```{r}
+sym_counts %>%
+  #filter(!is.na(site)) %>%
+  ggplot(aes(x = timepoint, y = cells.cm2 / 10^6, color = species)) +
+  labs(x = "") +
+  ylab(expression(bold(paste(atop("Cell Density", "(" *x*"10"^"6" *~cells *~ cm^"-2"*")"))))) + #using quotations over numbers allow them to be bold
+  #facet_wrap(~ species) +
+geom_jitter(width = 0.1) +                                            # Plot all points
+  stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
+               geom = "errorbar", color = "black", width = 0.5) +
+  stat_summary(fun.y = mean, geom = "point", color = "black")           # Plot mean
+```
+
+
+Output data to file.  
+
+```{r}
+sym_counts %>%
+  select(colony_id, species, cells.cm2) %>%
+  mutate(timepoint="FEB")%>%
+  write_csv(path = "February_2022/output/3_sym_densities.csv")
+
+
+```

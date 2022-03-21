@@ -4,4 +4,3 @@ In collaboration with major aims of the NSF [E5 project](https://e5coral.org/) t
 
 ## Data Tracking
 All data will be updated to this GitHub repo and uploaded to the [Pocillopora_Sampling_Google_Drive](https://drive.google.com/drive/u/0/folders/1w3KdwBZaaAFh8UdbOXM3KZCofldOC53i). A freezer list for all samples can be found [here](https://docs.google.com/spreadsheets/d/1nDgpn11vObWHyRcG5Qb2NstzV8tTP647Pb6OeyUiF-0/edit#gid=512468433).
-
