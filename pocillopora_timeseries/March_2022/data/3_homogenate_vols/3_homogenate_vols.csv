@@ -1,1 +1,21 @@
-colony_id,homog_vol_ml,note,date_airbrushed,site
+colony_id,timepoint,homog_vol_ml,date_airbrushed,site,notes
+POC-474,March,27,20220316,,
+POC-475,March,37.5,20220316,,
+POC-472,March,7.5,20220316,,
+POC-473,March,7.5,20220316,,"was 11mL, tube was cracked, leaked to 7.5mL"
+POC-466,March,22.5,20220316,,
+POC-467,March,17.5,20220316,,
+POC-468,March,27.5,20220316,,
+POC-469,March,75,20220316,,2 tubes of 37.5mL
+POC-470,March,32.5,20220316,,
+POC-471,March,100,20220316,,2 tubes of 50mL
+POC-481,March,39,20220316,,
+POC-477,March,22,20220316,,
+POC-483,March,58,20220316,,2 tubes of 29mL
+POC-485,March,70,20220316,,2 tubes of 35mL
+POC-480,March,7.5,20220316,,
+POC-479,March,25,20220316,,
+POC-484,March,50,20220316,,2 tubes of 25mL
+POC-478,March,66,20220316,,2 tubes of 33mL
+POC-476,March,32.5,20220316,,
+POC-482,March,21,20220316,,
