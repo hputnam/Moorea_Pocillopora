@@ -1,4 +1,11 @@
 colony_id,Sample,Diameter,weight1.g,weight2.g,timepoint,site,Notes
+1,Standard,7.44,140.4,146,JAN,NA,
+2,Standard,6.22,93.271,96.842,JAN,NA,
+3,Standard,5.08,46.368,48.827,JAN,NA,
+4,Standard,3.16,10.977,11.685,JAN,NA,
+5,Standard,2.52,6.212,6.59,JAN,NA,
+6,Standard,1.9,2.204,2.411,JAN,NA,
+7,Standard,1.18,0.577,0.649,JAN,NA,
 POC-470,coral,NA,18.459,19.427,March,Mahana,
 POC-466,coral,NA,8.992,9.467,March,Mahana,
 POC-482,coral,NA,9.09,9.618,March,FR,
