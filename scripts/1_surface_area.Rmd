@@ -22,7 +22,7 @@ library(tidyverse)
 ```{r}
 
 #load wax data
-wax.data <- read.csv("January_2022/data/", header=TRUE)
+wax.data <- read.csv("data_pocillopora_timeseries/1_January_2022/1_surface_area_data.csv", header=TRUE)
 
 wax.data$delta.mass.g <- wax.data$weight2.g-wax.data$weight1.g
 stnds <- subset(wax.data, Sample=="Standard")
@@ -36,7 +36,7 @@ stnds$surface.area.cm2 <- 4*pi*(stnds$rad)^2
 stnd.curve <- lm(surface.area.cm2~delta.mass.g, data=stnds)
 plot(surface.area.cm2~delta.mass.g, data=stnds)
 stnd.curve$coefficients
-summary(stnd.curve)$r.squared #r-squared = 0.99 20220306
+summary(stnd.curve)$r.squared #r-squared 
 
 
 ```
@@ -62,6 +62,6 @@ range(stnds$surface.area.cm2)
 smpls%>%
   mutate(timepoint="JAN")%>%
   select(colony_id, surface.area.cm2, timepoint)%>%
-    write_csv("January_2022/output/2_surface.area.calc.csv")
+    write_csv("data_pocillopora_timeseries/1_January_2022/1_surface.area.calc.csv")
 ```
 

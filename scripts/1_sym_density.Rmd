@@ -19,16 +19,16 @@ library(tidyverse)
 # Import data
 ```{r}
 # Cell count data
-sym_counts <- read_csv("January_2022/data/2_sym_counts/2_sym_counts_data.csv")
+sym_counts <- read_csv("data_pocillopora_timeseries/1_January_2022/1_sym_counts_data.csv")
 
 # Surface area data
-sa <- read.csv("January_2022/output/2_surface.area.calc.csv")
+sa <- read.csv("data_pocillopora_timeseries/1_January_2022/1_surface.area.calc.csv")
 
 # Tissue homogenate volume data
-homog_vols <- read_csv("January_2022/data/2_homogenate_vols/2_homogenate_vols.csv") %>% select(1:3)
+homog_vols <- read_csv("data_pocillopora_timeseries/1_January_2022/1_homogenate_vols.csv") %>% select(1:3)
 
 # Coral sample metadata
-metadata <- read_csv("January_2022/2_corals_sampled.csv") %>% select(1:4)
+metadata <- read_csv("data_pocillopora_timeseries/1_January_2022/1_corals_sampled.csv") %>% select(1:4)
 
 # Join homogenate volumes and surface area with sample metadata
 metadata <- full_join(metadata, homog_vols) %>%
@@ -76,7 +76,7 @@ Output data to file.
 sym_counts %>%
   select(colony_id, species, cells.cm2) %>%
   mutate(timepoint="JAN")%>%
-  write_csv(path = "January_2022/output/2_sym_densities.csv")
+  write_csv(path = "data_pocillopora_timeseries/1_January_2022/1_sym_densities.csv")
 
 
 ```
