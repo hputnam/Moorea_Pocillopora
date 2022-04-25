@@ -22,7 +22,7 @@ library(tidyverse)
 ```{r}
 
 #load wax data
-wax.data <- read.csv("gametogenesis_timeseries/March_2022/data/2_surface_area/2_surface_area_data.csv", header=TRUE)
+wax.data <- read.csv("data_pocillopora_timeseries/3_March_2022/3_surface_area_data.csv", header=TRUE)
 
 wax.data$delta.mass.g <- wax.data$weight2.g-wax.data$weight1.g
 stnds <- subset(wax.data, Sample=="Standard")
@@ -36,7 +36,7 @@ stnds$surface.area.cm2 <- 4*pi*(stnds$rad)^2
 stnd.curve <- lm(surface.area.cm2~delta.mass.g, data=stnds)
 plot(surface.area.cm2~delta.mass.g, data=stnds)
 stnd.curve$coefficients
-summary(stnd.curve)$r.squared #r-squared = 0.99 20220306
+summary(stnd.curve)$r.squared #r-squared 
 
 
 ```
@@ -44,7 +44,7 @@ summary(stnd.curve)$r.squared #r-squared = 0.99 20220306
 
 ```{r}
 #Calculate surface area using the standard curve
-smpls <- subset(wax.data, Sample=="Coral")
+smpls <- subset(wax.data, Sample=="coral")
 smpls$surface.area.cm2 <- stnd.curve$coefficients[2] * smpls$delta.mass.g + stnd.curve$coefficients[1]
 
 #select the samples only
@@ -60,8 +60,8 @@ range(stnds$surface.area.cm2)
 
 #Save the output for use in normilzation for phys assays
 smpls%>%
-  mutate(timepoint="March2022")%>%
+  mutate(timepoint="MARCH")%>%
   select(colony_id, surface.area.cm2, timepoint)%>%
-    write_csv("gametogenesis_timeseries/March_2022/output/surface.area.calc.csv")
+    write_csv("data_pocillopora_timeseries/3_March_2022/3_surface.area.calc.csv")
 ```
 
