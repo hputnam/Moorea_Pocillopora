@@ -1,1 +1,21 @@
-colony_id,timepoint,homog_vol_ml,note,date_airbrushed,site
+colony_id,timepoint,homog_vol_ml,date_airbrushed,site,note
+POC-472,FEB,15,20220320,backreef,
+POC-474,FEB,39,20220320,backreef,
+POC-473,FEB,56,20220320,backreef,2 tubes
+POC-470,FEB,17.5,20220320,backreef,
+POC-467,FEB,64,20220320,backreef,2 tubes
+POC-468,FEB,34,20220320,backreef,
+POC-475,FEB,54,20220320,backreef,2 tubes
+POC-471,FEB,12,20220320,backreef,
+POC-466,FEB,26,20220320,backreef,
+POC-469,FEB,16,20220320,backreef,
+POC-481,FEB,62,20220320,forereef,2 tubes
+POC-477,FEB,42.5,20220320,forereef,
+POC-476,FEB,32,20220320,forereef,
+POC-485,FEB,45,20220320,forereef,2 tubes
+POC-480,FEB,29,20220320,forereef,
+POC-484,FEB,39,20220320,forereef,
+POC-482,FEB,80,20220320,forereef,2 tubes
+POC-483,FEB,26,20220320,forereef,
+POC-478,FEB,84,20220320,forereef,2 tubes
+POC-479,FEB,64,20220320,forereef,2 tubes
