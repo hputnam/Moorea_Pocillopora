@@ -31,7 +31,7 @@ read_chl <- function(file) {
 }
 
 # List chlorophyll data files
-chl_path <- "data/1_chlorophyll/"                                        # Path to chlorophyll data directory
+chl_path <- "data_pocillopora_timeseries/3_March_2022/3_chlorophyll/"                                        # Path to chlorophyll data directory
 all_chl_files <- list.files(path = chl_path, pattern = "*.csv")          # List all files in directory
 chl_platemaps <- list.files(path = chl_path, pattern = "platemap")       # List platemap files
 chl_data_files <- setdiff(all_chl_files, chl_platemaps)                  # List absorbance data files
@@ -82,12 +82,12 @@ df <- df %>%
 # Normalize to surface area
 ```{r}
 # Load homogenate volume
-homog.vol <- read_csv("data/1_homogenate_vols/1_homogenate_vols.csv") %>%
+homog.vol <- read_csv("data_pocillopora_timeseries/3_March_2022/3_homogenate_vols.csv") %>%
   select(colony_id, homog_vol_ml)
 chl <- full_join(df, homog.vol)
 
 # Load surface area
-sa <- read_csv("output/1_surface_area.csv")
+sa <- read_csv("data_pocillopora_timeseries/3_March_2022/3_surface.area.calc.csv")
 chl <- full_join(chl, sa)
 
 # Multiply chlorophyll by the homogenate volume and divide by surface area
@@ -101,22 +101,22 @@ chl <- filter(chl, !colony_id %in% c("NA", "BK"))
 # write chlorophyll data to file
 chl %>%
   select(colony_id, chla.ug.cm2, chlc2.ug.cm2) %>%
-  mutate(timepoint="timepoint1")%>%
+  mutate(timepoint="MARCH")%>%
   filter(!is.na(chla.ug.cm2))%>%
   filter(!is.na(chlc2.ug.cm2))%>%
-  write_csv(path = "output/1_chlorophyll.csv")
+  write_csv(path = "data_pocillopora_timeseries/3_March_2022/3_chlorophyll.csv")
 ```
 
 # Plot results by species and site
 ```{r, eval = TRUE}
 # Join with sample metadata
-meta <- read_csv("../metadata/coral_metadata.csv")
+meta <- read_csv("data_pocillopora_timeseries/3_March_2022/3_corals_sampled.csv")
 chl <- right_join(chl, meta, by = "colony_id")
 
 # Plot chlorophyll a
 chl %>%
-  ggplot(aes(x = site, y = chla.ug.cm2, color = species)) +
-  facet_wrap(~species) +
+  ggplot(aes(x = site.x, y = chla.ug.cm2, color = timepoint)) +
+  #facet_wrap(~species) +
   labs(x = "", y = "chlorophyll a (µg/cm2)") +
   geom_jitter(width = 0.1) +                                            # Plot all points
   stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
@@ -125,8 +125,8 @@ chl %>%
 
 # Plot chlorophyll c2
 chl %>%
-  ggplot(aes(x = site, y = chlc2.ug.cm2, color = species)) +
-  facet_wrap(~species) +
+  ggplot(aes(x = site.x, y = chlc2.ug.cm2, color = timepoint)) +
+ # facet_wrap(~species) +
   labs(x = "", y = "chlorophyll c2 (µg/cm2)") +
   geom_jitter(width = 0.1) +                                            # Plot all points
   stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
