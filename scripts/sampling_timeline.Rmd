@@ -1,0 +1,133 @@
+---
+title: "Poc_Gameto"
+author: "HM Putnam"
+date: "2023-12-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+Load libraries
+```{r}
+library(scales)
+library(lubridate)
+library(ggplot2)
+library(tidyverse)
+library(knitr)
+library(timevis)
+
+```
+
+
+Load Data of Sampling
+```{r}
+data <- read.csv("data/Pocillopora_Sampling_Dates.csv", header=TRUE)
+data$date <- ymd(sprintf(data$date))
+
+data <- data %>%
+  distinct(date, .keep_all = TRUE)
+
+Event_type_levels <- c("Lagoon", "Forereef") 
+# Define the colors for the event types in the specified order. 
+## These hashtagged codes represent the colors (blue, green, yellow, red) as hexadecimal color codes.
+Event_type_colors <- c( "#FFC000", "#0070C0" ) 
+
+# Make the Event_type vector a factor using the levels we defined above
+data$Site <- factor(data$Site , levels= Event_type_levels, ordered=TRUE)
+
+# Set the heights we will use for our milestones.
+positions <- c(-0.00015,-0.00015,-0.0003,-0.00015,-0.0003,-0.0003, -0.00015,-0.0003,-0.00015,-0.0003,-0.00015,
+               -0.00015,-0.0003,-0.00015,-0.0003,-0.00015,-0.0003,-0.00015,-0.0003,-0.00015,-0.0003) 
+
+# Set the directions we will use for our milestone, for example above and below.
+directions <- c(1, -1) 
+
+# Assign the positions & directions to each date from those set above.
+line_pos <- data.frame(
+    "date"=unique(data$date),
+    "position"=rep(positions, length.out=length(unique(data$date))),
+    "direction"=rep(directions, length.out=length(unique(data$date))))
+
+# Create columns with the specified positions and directions for each milestone event
+data <- merge(x=data, y=line_pos, by="date", all = TRUE) 
+
+
+```
+
+```{r}
+# Create a one month "buffer" at the start and end of the timeline
+month_buffer <- 1
+day_buffer <- 25
+
+day_date_range <- seq(min(data$date) - days(day_buffer), max(data$date) + days(day_buffer), by='day')
+day_date_range
+
+# We want the format to be in the four digit format for years.
+day_format <- format(day_date_range, '%d') 
+day_df <- data.frame(day_date_range, day_format)
+
+day_df <- day_df %>%
+  filter(day_format  %in%  c("01","15"))
+
+month_date_range <- seq(min(data$date) - months(month_buffer), max(data$date) + months(month_buffer), by='month')
+
+
+# We are adding one month before and one month after the earliest and latest milestone in the clinical course.
+## We want the format of the months to be in the 3 letter abbreviations of each month.
+month_format <- format(month_date_range, '%b') 
+month_df <- data.frame(month_date_range, month_format)
+
+
+year_date_range <- seq(min(data$date), max(data$date) + months(month_buffer), by='year')
+
+# We will only show the years for which we have a december to january transition.
+# year_date_range <- as.Date(
+#     intersect(
+#         ceiling_date(year_date_range, unit="year"),
+#         floor_date(year_date_range, unit="year")),  
+#         origin = "1970-01-01") 
+
+# We want the format to be in the four digit format for years.
+year_format <- format(year_date_range, '%Y') 
+year_df <- data.frame(year_date_range, year_format)
+
+```
+
+Plot data
+```{r}
+# Create timeline coordinates with an x and y axis
+timeline_plot<-ggplot(data,aes(x=date,y= position, col=Site, label=Site))+
+  scale_x_continuous(n.breaks=24)+
+  geom_hline(yintercept=0, color = "black", size=0.3)+
+  geom_segment(data=data, aes(y=position,yend=0,xend=date), color='black', size=0.2) +
+  geom_point(aes(y=position), size=3) +
+  labs(col="Site")+
+  scale_color_manual(values=Event_type_colors, labels=Event_type_levels, drop = FALSE)+
+  theme_classic() +
+  theme(axis.line.y=element_blank(),
+                 axis.text.y=element_blank(),
+                 axis.title.x=element_blank(),
+                 axis.title.y=element_blank(),
+                 axis.ticks.y=element_blank(),
+                 axis.text.x =element_blank(),
+                 axis.ticks.x =element_blank(),
+                 axis.line.x =element_blank(),
+                 legend.position = "bottom"
+                ) +
+  geom_text(data=day_df, aes(x=day_date_range,y=0.00007,label=day_format),
+            size=2,vjust=0.9, color='black', angle=90)+
+  #geom_text(data=month_df, aes(x=month_date_range,y=0.0002,label=month_format),
+           # size=3.5,vjust=0, hjust=2.4, color='black')+
+  geom_text(data=year_df, aes(x=year_date_range,y=-0.0009,label=year_format, fontface="bold"),
+            size=5, color='black', hjust=1.3, vjust=-2) 
+
+
+# Print plot
+timeline_plot
+
+ggsave("output/timeine.jpg", timeline_plot, height = 2, width = 6)
+
+```
