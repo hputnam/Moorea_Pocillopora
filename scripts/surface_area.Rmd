@@ -52,7 +52,7 @@ smpls <- smpls %>%
   select(-diameter)
 
 
-smpls %>%
+xx <- smpls %>%
   count(full_sample_id) %>% arrange(n)
 
 #check the range to make sure your samples fall within the range of the standards
