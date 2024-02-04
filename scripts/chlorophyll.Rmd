@@ -116,26 +116,24 @@ chl %>%
 meta <- read_csv("data/corals_sampled.csv")
 chl <- right_join(chl, meta, by = "full_sample_id")
 
+monthorder <- c("January", "February","March", "April","May",
+                "June",  "July", "August", "September", 
+                "October","November")
+
+chl$timepoint <- factor(chl$timepoint,levels=monthorder)
+chl$group <- paste0(chl$timepoint, "_", chl$site)
+
 # Plot chlorophyll a
 chl %>%
-  ggplot(aes(x = timepoint, y = chla.ug.cm2, color = )) +
-  #facet_wrap(~species) +
+  ggplot(aes(x = timepoint, y = chla.ug.cm2, group=group, color=site)) +
+  geom_boxplot(aes(group=group, color=site))+
+  geom_jitter(width = 0.1) + # Plot all points
+  scale_color_manual(values=c("#E69F00", "#56B4E9")) +
+  #stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
+  #             geom = "errorbar", color = c("black"), width = 0.5) +
+  #stat_summary(fun.y = mean, geom = "point", color = "black")+           # Plot mean
   labs(x = "", y = "chlorophyll a (µg/cm2)") +
-  geom_jitter(width = 0.1) +                                            # Plot all points
-  stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
-               geom = "errorbar", color = "black", width = 0.5) +
-  stat_summary(fun.y = mean, geom = "point", color = "black")           # Plot mean
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-# Plot chlorophyll c2
-chl %>%
-  ggplot(aes(x = timepoint , y = chlc2.ug.cm2, color = species)) +
-  #facet_wrap(~species) +
-  labs(x = "", y = "chlorophyll c2 (µg/cm2)") +
-  geom_jitter(width = 0.1) +                                            # Plot all points
-  stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
-               geom = "errorbar", color = "black", width = 0.5) +
-  stat_summary(fun.y = mean, geom = "point", color = "black")           # Plot mean
 ```
-
-
-
