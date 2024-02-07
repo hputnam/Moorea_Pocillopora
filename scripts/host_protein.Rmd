@@ -70,7 +70,11 @@ std_curve <- df %>%
 # coef(mod)
 
 ## Fit nonlinear model for standard curve
-mod <- nls(formula = BSA_ug.mL ~ z + a * exp(b * abs562), start = list(z = 0, a = 1, b = 1), data = std_curve)
+#mod <- nls(formula = BSA_ug.mL ~ z + a * exp(b * abs562), start = list(z = 0, a = 1, b = 1), data = std_curve)
+#fitted <- mod %>% broom::augment()
+
+mod <- lm <- lm(BSA_ug.mL ~ abs562, data = std_curve)
+
 fitted <- mod %>% broom::augment()
 
 # Plot standard curve
@@ -97,6 +101,11 @@ prot <- df %>%
 std_curve_plot + 
   geom_point(data = prot, aes(x = abs562, y = prot_ug.mL), pch = "X", cex = 5, alpha = 0.3) +
   labs(title = "All samples projected on standard curve")
+
+prot <- prot %>%
+  group_by(full_sample_id) %>%
+  summarise(n = n(), prot_ug.mL = mean(abs562))
+
 ```
 
 # Normalize to surface area
@@ -114,7 +123,7 @@ metadata <- left_join(metadata, homog_vols, by="full_sample_id") %>%
   left_join(sa, by="full_sample_id")
 
 # Join prot data with metadata
-prot <- left_join(prot, metadata) %>%
+prot <- left_join(prot, metadata, by="full_sample_id") %>%
   mutate(prot_ug = prot_ug.mL * homog_vol_ml,
          prot_ug.cm2 = prot_ug / surface.area.cm2,
          prot_mg.cm2 = prot_ug.cm2 / 1000)
@@ -122,30 +131,31 @@ prot <- left_join(prot, metadata) %>%
 
 # Plot results by species and site
 ```{r}
-# Plot all data points with mean ± se
-prot %>%
-  filter(!is.na(species)) %>%
-  ggplot(aes(x = site.x, y = prot_mg.cm2)) +
-  facet_wrap(~timepoint.x)  +
-  #coord_cartesian(ylim = c(0, 10))+
-  labs(x = "", y = "Host soluble protein (mg/cm2)") +
-  geom_jitter(width = 0.1) +                                            # Plot all points
-  stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
-               geom = "errorbar", color = "black", width = 0.5) +
-  stat_summary(fun.y = mean, geom = "point", color = "black")           # Plot mean
+monthorder <- c("January", "February","March", "April","May",
+                "June",  "July", "August", "September", 
+                "October","November")
 
-# Remove outlier data points where absorbance was super low
-#prot <- prot %>%
-#  filter(abs562 > 0.1)
+prot$timepoint.x <- factor(prot$timepoint.x,levels=monthorder)
+prot$group <- paste0(prot$timepoint.x, "_", prot$site.x)
+
+# Plot 
+prot %>%
+  ggplot(aes(x = timepoint.x, y = prot_mg.cm2, group=group, color=site.x)) +
+  geom_boxplot(aes(group=group, color=site.x))+
+  geom_jitter(width = 0.1) + # Plot all points
+  scale_color_manual(values=c("#E69F00", "#56B4E9")) +
+  #stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
+  #             geom = "errorbar", color = c("black"), width = 0.5) +
+  #stat_summary(fun.y = mean, geom = "point", color = "black")+           # Plot mean
+  labs(x = "", y = "Host Soluble Protein (mg/cm2)") +
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 ```
 
 # Write data to output file
 ```{r}
 # Write protein data to output file
 prot %>%
-  group_by(full_sample_id) %>%
-  summarise(prot_ug = mean(prot_ug, na.rm = T),
-            prot_ug.cm2 = mean(prot_ug.cm2, na.rm = T)) %>%
   select(full_sample_id, prot_ug, prot_ug.cm2) %>%
   mutate(partner="host")%>%
   write_csv(., path = "output/host_protein.csv")
