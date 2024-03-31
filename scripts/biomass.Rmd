@@ -22,90 +22,67 @@ library(plotrix)
 
 ```{r }
 #Read in biomass data
-Data <- read.csv("data/1_biomass/1_biomass_data.csv")
+Data <- read.csv("data/biomass_data.csv")
 Data <- na.omit(Data)
 
-# Change POC-42 pan 221 from Sym to Host -- was recorded twice as Sym, assuming pan with m ore mass is host
-Data[Data$Pan.ID == 221, "partner"] <- "Host"
-# Remove pan 73 -- from lab notebook, material was stuck in pipet tip, and result is outlier
-Data[Data$Pan.ID == 73, ] <- NA
-  
 # calculated mass per ml
 #different volumes for sym (4ml) and host (5ml)
-sym <- 4
-host <- 5
+#sym <- 4
+#host <- 5
 
 #Load tissue homogenate volume
-homog_vol <- read.csv("data/1_homogenate_vols/1_homogenate_vols.csv", header=TRUE)
+homog_vol <- read.csv("data/homogenate_vols.csv", header=TRUE)
 
 # Load Surface area data
-sa <- read.csv("output/1_surface_area.csv")
+sa <- read_csv("output/surface.area.calc.csv")
 
 # Coral sample metadata
-metadata <- read_csv("../metadata/coral_metadata.csv") %>% select(1:3)
+metadata <- read_csv("data/corals_sampled.csv")
 
 # Join homogenate volumes and surface area with sample metadata
-metadata <- full_join(metadata, homog_vol) %>%
-  full_join(sa)
+metadata <- full_join(metadata, homog_vol, by="full_sample_id") %>%
+  full_join(sa, by="full_sample_id")
 
 #Standardize for volume input
 Data <- Data %>%
-  mutate(dry.pan.mass.g.ml = case_when(partner=="Sym" ~ dry.pan.mass.g/sym, partner=="Host" ~dry.pan.mass.g/host),
-         burnt.pan.mass.g.ml = case_when(partner=="Sym" ~ burnt.pan.mass.g/sym, partner=="Host" ~burnt.pan.mass.g/host))
+  mutate(dry.pan.mass.g.ml = case_when(partner=="sym" ~ dry.pan.mass.g/volume, partner=="host" ~dry.pan.mass.g/volume),
+         burnt.pan.mass.g.ml = case_when(partner=="sym" ~ burnt.pan.mass.g/volume, partner=="host" ~burnt.pan.mass.g/volume))
 
 # Standardize for the total homogenate volume
-Data <- left_join(Data, homog_vol)  %>%
+Data <- right_join(Data, metadata, by="full_sample_id")  %>%
   mutate(dry.pan.mass.g.vol.corr = dry.pan.mass.g.ml*homog_vol_ml, 
-         burnt.pan.mass.g.vol.corr = burnt.pan.mass.g.ml*homog_vol_ml)
-
-
-# Calculate Dry Biomass
-dw <- left_join(Data, metadata) %>%
+         burnt.pan.mass.g.vol.corr = burnt.pan.mass.g.ml*homog_vol_ml) %>%
   mutate(dry.bioimass.g = (dry.pan.mass.g.vol.corr - initial.mass.g),
-         DW.mg.cm2 = ((dry.bioimass.g)*1000) / surface.area.cm2)
-
-
-# Calculate AFDW
-afdw <- left_join(Data, metadata) %>%
-  mutate(dry.bioimass.g = (dry.pan.mass.g.vol.corr - burnt.pan.mass.g.vol.corr),
-         AFDW.mg.cm2 = ((dry.bioimass.g)*1000) / surface.area.cm2)
-
+         DW.mg.cm2 = ((dry.bioimass.g)*1000) / surface.area.cm2) %>%
+  mutate(afdry.bioimass.g = (dry.pan.mass.g.vol.corr - burnt.pan.mass.g.vol.corr),
+         AFDW.mg.cm2 = ((afdry.bioimass.g)*1000) / surface.area.cm2)
 
 ```
 
-Output biomass data to .csv.  
 
 ```{r}
-afdw<-afdw %>%
-  group_by(colony_id, partner)%>%
-  summarise(AFDW.mg.cm2=mean(AFDW.mg.cm2))%>%
-  left_join(.,metadata)%>% #add metadata back into file
-  select(colony_id, partner, site, species, AFDW.mg.cm2) %>%
-  mutate(timepoint="timepoint1")
+#summarize Dry Biomass mean and sem 
 
-dw<-dw %>% 
-  group_by(colony_id, partner)%>%
-  summarise(DW.mg.cm2=mean(DW.mg.cm2))%>%
-  left_join(.,metadata)%>% #add metadata back into file
-  select(colony_id, partner, site, species, DW.mg.cm2) %>%
-  mutate(timepoint="timepoint1")
-  
-output<-left_join(afdw,dw)%>%
-  write_csv(path = "output/1_biomass.csv")
-```
+monthorder <- c("January", "February","March", "April","May",
+                "June",  "July", "August", "September", 
+                "October","November")
 
-```{r}
-#summarize Dry Biomass mean and sem by site, species, and partner and plot
-dw<-dw[!is.na(dw$species),]#remove rows that are not identified for species and site
-  
-dw %>% 
-  group_by(species, site, partner)%>%
-  summarise(mean.value = mean(DW.mg.cm2), se = std.error(DW.mg.cm2)) %>%
-  ggplot(aes(x = site, y = mean.value, group = species, color = partner))+
-  ylab("DW mg cm-2")+
-  geom_point(size = 3)+
-  geom_errorbar(aes(x = site, ymin = mean.value-se, ymax = mean.value+se), width = 0.5)+
-  facet_grid(~species, scales = "free_y")
+Data$timepoint <- factor(Data$timepoint.x,levels=monthorder)
+Data$group <- paste0(Data$timepoint.x, "_", Data$site)
+ 
+# Plot 
+Data %>%
+  ggplot(aes(x = timepoint, y = DW.mg.cm2, group=group, color=site.x)) +
+  geom_boxplot(aes(group=group, color=site.x))+
+  geom_jitter(width = 0.1) + # Plot all points
+  scale_color_manual(values=c("#E69F00", "#56B4E9")) +
+  #stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
+  #             geom = "errorbar", color = c("black"), width = 0.5) +
+  #stat_summary(fun.y = mean, geom = "point", color = "black")+           # Plot mean
+  labs(x = "", y = "Biomass (µg/cm2)") +
+  facet_wrap("partner")+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
 
 ```
