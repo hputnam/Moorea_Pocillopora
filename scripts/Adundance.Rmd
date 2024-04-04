@@ -1,12 +1,11 @@
 ---
 title: "Gamete Abundance Analysis"
-author: "jillashey"
-date: "2023-04-10"
+author: "hputnam"
+date: "2024-04-01"
 output: html_document
 ---
 
-This script will analyze gamete abundance in Astrangia poculata over time. The data is separated into 3 treatments (ambient temperature, high temperature, field). 
-
+This script will analyze gamete abundance over time. 
 ## Load packages 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -29,7 +28,7 @@ df_relative_abundance <- Abundance_long %>%
   mutate(grand.tots = sum(tots)) %>%
   mutate(freq = tots/grand.tots) 
 
-df_relative_abundance <- replace(df_relative_abundance, is.na(df_relative_abundance), 0)
+#df_relative_abundance <- replace(df_relative_abundance, is.na(df_relative_abundance), 0)
 
 df_relative_abundance$month <- factor(df_relative_abundance$month, levels = c("January","February", "March","April", "May","June", "July", "August", "September","October",  "November"))
 
@@ -38,6 +37,13 @@ df_relative_abundance$group <- paste0(df_relative_abundance$month,"_", df_relati
 df_relative_abundance$month <- factor(df_relative_abundance$month, levels = c("January","February", "March","April", "May","June", "July", "August", "September","October",  "November"))
 
 #df_relative_abundance$Stage <- factor(df_relative_abundance$Stage, levels = c("StageI","StageII","StageIII","StageIV"))
+
+my_tag <- c("", "", "", "", "", "", "", "", "", "", "",
+            "No Data", "", "", "", "", "", "", "", "", "", "")
+
+anno <- data.frame(x1 = 0.3,  y1 = 3, lab = "No Data")
+anno
+
 
 ```
 
@@ -48,12 +54,21 @@ male_df_relative_abundance <- df_relative_abundance %>%
 
 Male <- male_df_relative_abundance %>% ggplot(aes(x=replicate_id, y=freq, group=Stage, color=Stage, fill=Stage)) +
   geom_col()+
-  #geom_text(aes(label=grand.tots),color="black", size=1.5, vjust = 0.1)+
   facet_wrap(c("site", "month"), ncol=11)+
+  facet_nested("site" * site ~ "month" * month)+
   theme_bw()+
   ylab("Proportion of Sperm")+
-  theme(axis.text.x = element_text(angle = 90))
+  theme(strip.text.x = element_text(size = 8, colour = "black"),axis.text.x=element_blank(), legend.position = "top", axis.title.x=element_blank())
 Male
+# Male <-  tag_facet(Male, x = -Inf, y = -Inf, 
+#           vjust = -1, hjust = -0.25,
+#           open = "", close = "",
+#           fontface = 1,
+#           size = 3,
+#           family = "serif",
+#           tag_pool = my_tag)
+# 
+# Male
 ```
 
 Female Gametes
@@ -61,23 +76,34 @@ Female Gametes
 female_df_relative_abundance <- df_relative_abundance %>%
   filter(!sex=="male")
 
-Female <- female_df_relative_abundance %>% ggplot(aes(x=replicate_id, y=freq, group=Stage, color=Stage, fill=Stage)) +
+
+Female <- female_df_relative_abundance %>% ggplot(aes(x=replicate_id, y=freq, group=Stage, color=Stage, fill=Stage, label=site)) +
   geom_col()+
-  #geom_text(aes(label=grand.tots),color="black", size=1.5, vjust = 0.1)+
-  facet_wrap(c("site", "month"), ncol=11)+
+  #facet_wrap(c("site", "month"), ncol=11)+
+  facet_nested("site" * site ~ "month" * month)+
   theme_bw()+
   ylab("Proportion of Eggs")+
-  theme(axis.text.x = element_text(angle = 90))
+  theme(strip.text.x = element_text(size = 8, colour = "black"),axis.text.x = element_text(angle = 90), legend.position = "none", axis.title.x=element_blank())
 Female
+
+# Female <- tag_facet(Female, x = -Inf, y = -Inf, 
+#           vjust = -1, hjust = -0.25,
+#           open = "", close = "",
+#           fontface = 1,
+#           size = 3,
+#           family = "serif",
+#           tag_pool = my_tag)
+# Female
 ```
 Arrange and save plots
 ```{r}
 
 plots <- grid.arrange(Male, Female, nrow = 2)
 
+#https://stackoverflow.com/questions/36941197/overall-label-for-facets
+
 ggsave("output/Gametogenesis.pdf", plots , width = 10, height = 6)
 ggsave("output/Gametogenesis.jpg", plots , width = 10, height = 6)
 
 
 ```
-
