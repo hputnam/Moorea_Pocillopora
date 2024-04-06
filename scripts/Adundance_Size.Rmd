@@ -12,6 +12,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library("tidyverse")
 library("gridExtra")
+library("ggh4x")
+library("plotrix")
 ```
 
 ## Load data & select specific columns 
@@ -95,15 +97,72 @@ Female
 #           tag_pool = my_tag)
 # Female
 ```
+
+
+```{r}
+Size <- read.csv("data/histology_data_size.csv", header = T)
+
+Size$geo.mean <- sqrt(Size$length*Size$width)
+
+Size$geo.mean.vol <- pi*((Size$geo.mean/2)^2)
+
+Size <- Size %>% separate(coral.ID, c("colony_id", "date"), sep = "(?<=[0-9])-")
+
+size.means <- Size %>%
+  group_by(site, month, sex) %>%
+  summarise(gm = mean(geo.mean, na.rm=TRUE), 
+            sem = std.error(geo.mean, na.rm=TRUE),
+            n=n())
+
+size.means[size.means == "NaN"] <- NA
+
+size.means$month <- factor(size.means$month, levels = c("January","February", "March","April", "May","June", "July", "August", "September","October",  "November"))
+
+size.means$sex <- factor(size.means$sex, levels = c("male", "female"))
+
+vol.means <- Size %>%
+  group_by(site, month, sex) %>%
+  summarise(gm = mean(geo.mean.vol, na.rm=TRUE), 
+            sem = std.error(geo.mean.vol, na.rm=TRUE),
+            n=n())
+
+vol.means[vol.means == "NaN"] <- NA
+
+#vol.means$mm3 <- vol.means$gm/10^9
+
+vol.means$month <- factor(vol.means$month, levels = c("January","February", "March","April", "May","June", "July", "August", "September","October",  "November"))
+
+Size.plot <- size.means %>% 
+  filter(!is.na(gm)) %>%
+  ggplot(aes(x=month, y=gm, colour = site, label=site)) +
+  scale_x_discrete(limits = c("January","February", "March","April", "May","June", "July", "August", "September","October",  "November"))+
+  geom_point(aes(),size=2,position=position_dodge(width = 0.1))+
+  geom_errorbar(aes(ymin=gm-sem, ymax=gm+sem), width=.1,position=position_dodge(width = 0.1)) +
+  facet_wrap("sex", ncol=1, scales = "free")+
+  theme_bw()+
+  ylab("Geometric Mean Diameter (µm)")+
+  theme(strip.text.x = element_text(size = 8, colour = "black"),axis.text.x = element_text(angle = 90), legend.position = "top", axis.title.x=element_blank())
+Size.plot
+
+```
+
 Arrange and save plots
 ```{r}
 
-plots <- grid.arrange(Male, Female, nrow = 2)
+stage.plots <- grid.arrange(Male, Female, nrow = 2)
 
 #https://stackoverflow.com/questions/36941197/overall-label-for-facets
 
-ggsave("output/Gametogenesis.pdf", plots , width = 10, height = 6)
-ggsave("output/Gametogenesis.jpg", plots , width = 10, height = 6)
+ggsave("output/Gametogenesis_Stage.pdf", stage.plots , width = 10, height = 6)
+ggsave("output/Gametogenesis_Stage.jpg", stage.plots , width = 10, height = 6)
+
+
+size.plots <- grid.arrange(Size.plot, nrow = 1)
+
+#https://stackoverflow.com/questions/36941197/overall-label-for-facets
+
+ggsave("output/Gametogenesis_Size.pdf", size.plots , width = 10, height = 6)
+ggsave("output/Gametogenesis_Size.jpg", size.plots , width = 10, height = 6)
 
 
 ```
