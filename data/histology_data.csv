@@ -24,7 +24,7 @@
 20220126,POC-472,POC-472-20220126,Rep2,Pocillopora,January,backreef,POC472_LAG_20220126_2.vsi,22,3.6529,microns,female,0,0,0,0,
 20220215,POC-472,POC-472-20220215,Rep2,Pocillopora,February,backreef,POC_472_LAG_20220215_1.vsi,22,3.6529,microns,female,0,0,0,0,
 20220315,POC-472,POC-472-20220315,Rep2,Pocillopora,March,backreef,POC_472_LAG_20220315_2.vsi,22,3.6529,microns,female,0,0,0,0,
-20220414,POC-472,POC-472-20220414,Rep2,Pocillopora,April,backreef,POC_472_LAG_20220215_1.vsi,22,3.6529,microns,female,0,0,0,0,
+20220414,POC-472,POC-472-20220414,Rep2,Pocillopora,April,backreef,POC_472_LAG_20220414_1.vsi,22,3.6529,microns,female,0,0,0,0,
 20220515,POC-472,POC-472-20220515,Rep2,Pocillopora,May,backreef,POC_472_LAG_20220515_2.vsi,22,3.6529,microns,female,0,0,0,0,
 20220616,POC-472,POC-472-20220616,Rep2,Pocillopora,June,backreef,POC_472_LAG_20220616_2.vsi,22,3.6529,microns,female,0,0,0,0,
 20220727,POC-472,POC-472-20220727,Rep2,Pocillopora,July,backreef,POC_472_LAG_20220727_2.vsi,22,3.6529,microns,female,0,0,0,0,
@@ -35,7 +35,7 @@
 20220126,POC-472,POC-472-20220126,Rep2,Pocillopora,January,backreef,POC472_LAG_20220126_2.vsi,22,3.6529,microns,male,0,0,0,0,
 20220215,POC-472,POC-472-20220215,Rep2,Pocillopora,February,backreef,POC_472_LAG_20220215_1.vsi,22,3.6529,microns,male,0,0,0,0,
 20220315,POC-472,POC-472-20220315,Rep2,Pocillopora,March,backreef,POC_472_LAG_20220315_2.vsi,22,3.6529,microns,male,0,0,0,0,
-20220414,POC-472,POC-472-20220414,Rep2,Pocillopora,April,backreef,POC_472_LAG_20220215_1.vsi,22,3.6529,microns,male,0,0,0,0,
+20220414,POC-472,POC-472-20220414,Rep2,Pocillopora,April,backreef,POC_472_LAG_20220414_1.vsi,22,3.6529,microns,male,0,0,0,0,
 20220515,POC-472,POC-472-20220515,Rep2,Pocillopora,May,backreef,POC_472_LAG_20220515_2.vsi,22,3.6529,microns,male,0,0,0,0,
 20220616,POC-472,POC-472-20220616,Rep2,Pocillopora,June,backreef,POC_472_LAG_20220616_2.vsi,22,3.6529,microns,male,0,0,0,0,
 20220727,POC-472,POC-472-20220727,Rep2,Pocillopora,July,backreef,POC_472_LAG_20220727_2.vsi,22,3.6529,microns,male,0,0,0,0,
@@ -77,7 +77,7 @@
 20221015,POC-474,POC-474-20221015,Rep4,Pocillopora,October,backreef,20221015_POC474_LAG_02.vsi,"45,117,86",3.6529,microns,female,0,10,1,0,
 20221111,POC-474,POC-474-20221111,Rep4,Pocillopora,November,backreef,20221113_POC474_LAG_01.vsi,14,3.6529,microns,female,0,7,16,0,"file name incorrect, sample ID is correct"
 20220126,POC-474,POC-474-20220126,Rep4,Pocillopora,January,backreef,POC_474_LAG_20220126_2.vsi,22,3.6529,microns,male,0,0,0,0,
-20220215,POC-474,POC-474-20220215,Rep4,Pocillopora,February,backreef,POC474_LAG_20220215_2.vsi,22,3.6529,microns,male,0,0,0,0,
+20220215,POC-474,POC-474-20220215,Rep4,Pocillopora,February,backreef,POC474_LAG_20220215_2.vsi,22,3.6529,microns,male,0,2,0,0,"image captured, spermary cut weird but counted and sized"
 20220315,POC-474,POC-474-20220315,Rep4,Pocillopora,March,backreef,POC474_LAG_20220315_2.vsi,22,3.6529,microns,male,0,0,0,0,
 20220414,POC-474,POC-474-20220414,Rep4,Pocillopora,April,backreef,POC474_LAG_20220414_2.vsi,22,3.6529,microns,male,0,0,0,0,
 20220515,POC-474,POC-474-20220515,Rep4,Pocillopora,May,backreef,POC474_LAG_20220515_2.vsi,22,3.6529,microns,male,0,0,0,0,
@@ -139,7 +139,7 @@
 20220930,POC-477,POC-477-20220930,Rep1,Pocillopora,September,forereef,POC477_FOR_20220930_1.vsi,14,3.6529,microns,male,0,5,0,0,
 20221017,POC-477,POC-477-20221017,Rep1,Pocillopora,October,forereef,POC477_FOR_20221017_1.vsi,14,3.6529,microns,male,0,7,0,0,
 20221110,POC-477,POC-477-20221110,Rep1,Pocillopora,November,forereef,POC477_FOR_20221110_1.vsi,14,3.6529,microns,male,0,2,5,1,
-20220217,POC-478,POC-478-20220217,Rep2,Pocillopora,February,forereef,POC478_FOR_20220217_1.vsi,14,3.6529,microns,female,0,0,0,0,Stage 4 2
+20220217,POC-478,POC-478-20220217,Rep2,Pocillopora,February,forereef,POC478_FOR_20220217_1.vsi,14,3.6529,microns,female,0,3,0,0,
 20220316,POC-478,POC-478-20220316,Rep2,Pocillopora,March,forereef,20220316_POC478_FOR_02.vsi,22,3.6529,microns,female,0,0,0,0,
 20220413,POC-478,POC-478-20220413,Rep2,Pocillopora,April,forereef,POC478_FOR_20220413_2.vsi,14,3.6529,microns,female,0,0,0,0,
 20220517,POC-478,POC-478-20220517,Rep2,Pocillopora,May,forereef,POC478_FOR_20220517_2.vsi,14,3.6529,microns,female,1,1,0,0,
@@ -219,3 +219,4 @@
 20220930,POC-481,POC-481-20220930,Rep5,Pocillopora,September,forereef,POC_481_FOR_20220930_2.vsi,14,3.6529,microns,male,6,4,0,0,
 20221017,POC-481,POC-481-20221017,Rep5,Pocillopora,October,forereef,POC_481_FOR_20221017_2.vsi,22,3.6529,microns,male,0,0,0,0,
 20221110,POC-481,POC-481-20221110,Rep5,Pocillopora,November,forereef,POC_481_FOR_20221110_2.vsi,22,3.6529,microns,male,0,10,12,0,
+,,,,,,,,,,,,,,,,
