@@ -14,6 +14,7 @@ library("tidyverse")
 library("gridExtra")
 library("ggh4x")
 library("plotrix")
+
 ```
 
 ## Load data & select specific columns 
@@ -46,6 +47,8 @@ my_tag <- c("", "", "", "", "", "", "", "", "", "", "",
 anno <- data.frame(x1 = 0.3,  y1 = 3, lab = "No Data")
 anno
 
+#egg <- bquote("\u2640")
+#sperm <- bquote("\u2642")
 
 ```
 
@@ -54,8 +57,9 @@ Male Gametes
 male_df_relative_abundance <- df_relative_abundance %>%
   filter(!sex=="female")
 
-Male <- male_df_relative_abundance %>% ggplot(aes(x=replicate_id, y=freq, group=Stage, color=Stage, fill=Stage)) +
+Male <- male_df_relative_abundance %>% ggplot(aes(x=replicate_id, y=freq, group=Stage, fill=Stage)) +
   geom_col()+
+  scale_fill_manual(values = c("lightblue", "skyblue2", "dodgerblue3", "blue"))+
   facet_wrap(c("site", "month"), ncol=11)+
   facet_nested("site" * site ~ "month" * month)+
   theme_bw()+
@@ -79,9 +83,9 @@ female_df_relative_abundance <- df_relative_abundance %>%
   filter(!sex=="male")
 
 
-Female <- female_df_relative_abundance %>% ggplot(aes(x=replicate_id, y=freq, group=Stage, color=Stage, fill=Stage, label=site)) +
+Female <- female_df_relative_abundance %>% ggplot(aes(x=replicate_id, y=freq, group=Stage, fill=Stage, label=site)) +
   geom_col()+
-  #facet_wrap(c("site", "month"), ncol=11)+
+  scale_fill_manual(values = c("lightblue", "skyblue2", "dodgerblue3", "blue"))+
   facet_nested("site" * site ~ "month" * month)+
   theme_bw()+
   ylab("Proportion of Eggs")+
@@ -138,6 +142,8 @@ Size.plot <- size.means %>%
   scale_x_discrete(limits = c("January","February", "March","April", "May","June", "July", "August", "September","October",  "November"))+
   geom_point(aes(),size=2,position=position_dodge(width = 0.1))+
   geom_errorbar(aes(ymin=gm-sem, ymax=gm+sem), width=.1,position=position_dodge(width = 0.1)) +
+  #geom_text(aes(label = n, y=10, size=2)) +
+  scale_color_manual(values = c("coral1",  "blue"))+
   facet_wrap("sex", ncol=1, scales = "free")+
   theme_bw()+
   ylab("Geometric Mean Diameter (µm)")+
