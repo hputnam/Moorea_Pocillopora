@@ -137,3 +137,29 @@ chl %>%
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
 ```
+
+#Filter outliers to keep data that is less than 12
+```{r}
+chl_subset12 <-chl %>%
+  dplyr::filter(chla.ug.cm2<12)
+# Plot chlorophyll a
+chl_subset12 %>%
+  ggplot(aes(x = timepoint, y = chla.ug.cm2, group=group, color=site)) +
+  geom_boxplot(aes(group=group, color=site))+
+  geom_jitter(width = 0.1) + # Plot all points
+  scale_color_manual(values=c("#E69F00", "#56B4E9")) +
+  #stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
+  #             geom = "errorbar", color = c("black"), width = 0.5) +
+  #stat_summary(fun.y = mean, geom = "point", color = "black")+           # Plot mean
+  labs(x = "", y = "chlorophyll a (µg/cm2)") +
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+
+
+
+
+
+
+
