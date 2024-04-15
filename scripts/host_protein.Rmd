@@ -30,7 +30,7 @@ df <- tibble(file = prot_data_files) %>%
   separate(file, into = c("date", "plate", "partner"), remove = FALSE) %>%
   unite(plate, date, plate, partner) %>%
   mutate(platemap = map(plate, ~read_csv(paste0(prot_path, ., "_BCA_platemap.csv"))),
-         prot_data = map(file, ~read_csv(paste0(prot_path, .)) %>% rename(well = Well)))
+         prot_data = map(file, ~read_csv(paste0(prot_path, .)) %>% rename(well = well)))
 
 # Merge platemap and data for each plate
 df <- df %>%

@@ -17,18 +17,14 @@ if (!require("plotrix")) install.packages("plotrix")
 # load packages
 library(tidyverse)
 library(plotrix)
+library(gridExtra)
 
 ```
 
 ```{r }
 #Read in biomass data
 Data <- read.csv("data/biomass_data.csv")
-Data <- na.omit(Data)
-
-# calculated mass per ml
-#different volumes for sym (4ml) and host (5ml)
-#sym <- 4
-#host <- 5
+#Data <- na.omit(Data)
 
 #Load tissue homogenate volume
 homog_vol <- read.csv("data/homogenate_vols.csv", header=TRUE)
@@ -40,22 +36,32 @@ sa <- read_csv("output/surface.area.calc.csv")
 metadata <- read_csv("data/corals_sampled.csv")
 
 # Join homogenate volumes and surface area with sample metadata
-metadata <- full_join(metadata, homog_vol, by="full_sample_id") %>%
-  full_join(sa, by="full_sample_id")
+Data <- metadata %>% left_join(homog_vol %>% select(full_sample_id,homog_vol_ml)) %>%
+  left_join(sa %>% select(full_sample_id,surface.area.cm2)) %>%
+  left_join(Data, by="full_sample_id")
 
-#Standardize for volume input
+#Standardize DW for initial pan weight
 Data <- Data %>%
-  mutate(dry.pan.mass.g.ml = case_when(partner=="sym" ~ dry.pan.mass.g/volume, partner=="host" ~dry.pan.mass.g/volume),
-         burnt.pan.mass.g.ml = case_when(partner=="sym" ~ burnt.pan.mass.g/volume, partner=="host" ~burnt.pan.mass.g/volume))
+  mutate(DW.corr.g = dry.pan.mass.g - initial.mass.g)
 
-# Standardize for the total homogenate volume
-Data <- right_join(Data, metadata, by="full_sample_id")  %>%
-  mutate(dry.pan.mass.g.vol.corr = dry.pan.mass.g.ml*homog_vol_ml, 
-         burnt.pan.mass.g.vol.corr = burnt.pan.mass.g.ml*homog_vol_ml) %>%
-  mutate(dry.bioimass.g = (dry.pan.mass.g.vol.corr - initial.mass.g),
-         DW.mg.cm2 = ((dry.bioimass.g)*1000) / surface.area.cm2) %>%
-  mutate(afdry.bioimass.g = (dry.pan.mass.g.vol.corr - burnt.pan.mass.g.vol.corr),
-         AFDW.mg.cm2 = ((afdry.bioimass.g)*1000) / surface.area.cm2)
+#Standardize DW for volume input
+Data <- Data %>%
+  mutate(DW.corr.vol.g = (DW.corr.g/volume)*homog_vol_ml) %>%
+  mutate(DW.mg.cm2 = (DW.corr.vol.g*1000) / surface.area.cm2)
+
+#Standardize Ash for initial pan weight
+Data <- Data %>%
+  mutate(Ash.corr.g = burnt.pan.mass.g - initial.mass.g)
+
+#Standardize Ash for volume input
+Data <- Data %>%
+  mutate(Ash.corr.vol.g = (Ash.corr.g/volume)*homog_vol_ml) %>%
+  mutate(Ash.mg.cm2 = (Ash.corr.vol.g*1000) / surface.area.cm2)
+
+#Calculate AFDW
+Data <- Data %>%
+  mutate(AFDW.mg.cm2 = DW.mg.cm2 - Ash.mg.cm2)
+
 
 ```
 
@@ -67,39 +73,48 @@ monthorder <- c("January", "February","March", "April","May",
                 "June",  "July", "August", "September", 
                 "October","November")
 
-Data$timepoint <- factor(Data$timepoint.x,levels=monthorder)
-Data$group <- paste0(Data$timepoint.x, "_", Data$site)
+Data$timepoint <- factor(Data$timepoint,levels=monthorder)
+Data$group <- paste0(Data$timepoint, "_", Data$site)
+
+Data<-Data[!is.na(Data$partner),]#remove rows that are not identified for species and site
+
+write.csv(Data, "/Users/hputnam/Desktop/junk.csv")
  
 # Plot 
-Data %>%
-  ggplot(aes(x = timepoint, y = DW.mg.cm2, group=group, color=site.x)) +
-  geom_boxplot(aes(group=group, color=site.x))+
+DW <- Data %>%
+  ggplot(aes(x = timepoint, y = DW.mg.cm2, group=group, color=site)) +
+  geom_boxplot(aes(group=group, color=site))+
   geom_jitter(width = 0.1) + # Plot all points
   scale_color_manual(values=c("#E69F00", "#56B4E9")) +
   #stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
   #             geom = "errorbar", color = c("black"), width = 0.5) +
   #stat_summary(fun.y = mean, geom = "point", color = "black")+           # Plot mean
-  labs(x = "", y = "Biomass (µg/cm2)") +
+  labs(x = "", y = "Biomass (mg/cm2)") +
   facet_wrap("partner")+
   theme_bw()+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
+DW
 
-```
+AFDW <- Data %>%
+  ggplot(aes(x = timepoint, y = AFDW.mg.cm2, group=group, color=site)) +
+  geom_boxplot(aes(group=group, color=site))+
+  geom_jitter(width = 0.1) + # Plot all points
+  scale_color_manual(values=c("#E69F00", "#56B4E9")) +
+  #stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
+  #             geom = "errorbar", color = c("black"), width = 0.5) +
+  #stat_summary(fun.y = mean, geom = "point", color = "black")+           # Plot mean
+  labs(x = "", y = "AFDW Biomass (mg/cm2)") +
+  facet_wrap("partner")+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-```{r}
-#summarize AFDW mean and sem by site, species, and partner and plot
-afdw<-afdw[!is.na(afdw$species),]#remove rows that are not identified for species and site
+AFDW 
 
-afdw %>% 
-  group_by(species, site, partner)%>%
-  summarise(mean.value = mean(AFDW.mg.cm2), se = std.error(AFDW.mg.cm2)) %>%
-  ggplot(aes(x = site, y = mean.value, group = species, color = partner))+
-  ylab("AFDW mg cm-2")+
-  geom_point(size = 3)+
-  geom_errorbar(aes(x = site, ymin = mean.value-se, ymax = mean.value+se), width = 0.5)+
-  facet_grid(~species, scales = "free_y")
+biomass.plots <- grid.arrange(DW, AFDW, nrow = 2)
 
+ggsave("output/Biomass.pdf", biomass.plots , width = 8, height = 6)
+ggsave("output/Biomass.jpg", biomass.plots , width = 8, height = 6)
 
 ```
 

@@ -3,12 +3,9 @@ title: "Symbiont density analysis"
 output: html_document
 ---
 
-#Title: Protein Data
-#Project: E5
 #Author: HM Putnam 
 #Edited by: HM Putnam
-#Date Last Modified: 20191104
-#See Readme file for details
+
 
 ```{r setup, include = FALSE}
 ## install packages if you dont already have them
@@ -62,25 +59,29 @@ sym_counts <- sym_counts %>%
 
 # Plot data
 ```{r}
-sym_counts %>%
-  filter(!is.na(site)) %>%
-  ggplot(aes(x = timepoint, y = cells.cm2, color = timepoint)) +
-  labs(x = "",y = "Cell Density (Cells/cm2)") +
-  facet_wrap(~ site) +
-geom_jitter(width = 0.1) +                                            # Plot all points
-  stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
-               geom = "errorbar", color = "black", width = 0.5) +
-  stat_summary(fun.y = mean, geom = "point", color = "black")           # Plot mean
+monthorder <- c("January", "February","March", "April","May",
+                "June",  "July", "August", "September", 
+                "October","November")
+
+sym_counts$timepoint <- factor(sym_counts$timepoint,levels=monthorder)
+sym_counts$group <- paste0(sym_counts$timepoint, "_", sym_counts$site)
+
+# Plot 
+sym <- sym_counts %>%
+  ggplot(aes(x = timepoint, y = cells.cm2, group=group, color=site)) +
+  geom_boxplot(aes(group=group, color=site))+
+  geom_jitter(width = 0.1) + # Plot all points
+  scale_color_manual(values=c("#E69F00", "#56B4E9")) +
+  #stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
+  #             geom = "errorbar", color = c("black"), width = 0.5) +
+  #stat_summary(fun.y = mean, geom = "point", color = "black")+           # Plot mean
+  labs(x = "", y = "Symbiont Density (cells/cm2)") +
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+sym
+
+ggsave("output/cell_density.jpg", sym, width=6, height=3)
+
 ```
 
-
-Output data to file.  
-
-# ```{r}
-# sym_counts %>%
-#   select(colony_id, site, species, cells.cm2) %>%
-#   mutate(timepoint="timepoint1")%>%
-#   write_csv(path = "output/calculated_sym_densities.csv")
-# 
-# 
-# ```

@@ -2,7 +2,7 @@
 title: "Chlorophyll analysis"
 author: "HM Putnam, AS Huffmyer"
 edited by: "DM Becker-Polinski"
-date: "20220310"
+date: "20240410"
 output: html_document
 editor_options: 
   chunk_output_type: console
@@ -75,10 +75,6 @@ df <- df %>%
   mutate(chla.ug.ml = (11.43 * adj663)/0.6 - (0.64 * adj630)/0.6,
         chlc2.ug.ml = (27.09 * adj630)/0.6 - (3.63 * adj663)/0.6)
 
-#previous, with no pathlength adjustment
-#df <- df %>%
-  #mutate(chla.ug.ml = (11.43 * adj663) - (0.64 * adj630),
-        #chlc2.ug.ml = (27.09 * adj630) - (3.63 * adj663))
 ```
 
 
@@ -101,13 +97,7 @@ chl <- chl %>%
 # remove blanks and NAs
 chl <- filter(chl, !full_sample_id %in% c("NA", "BK"))
 
-# write chlorophyll data to file
-chl %>%
-  select(full_sample_id, chla.ug.cm2, chlc2.ug.cm2) %>%
-  mutate(timepoint="January2022")%>%
-  filter(!is.na(chla.ug.cm2))%>%
-  filter(!is.na(chlc2.ug.cm2))%>%
-  write_csv(path = "output/chlorophyll.csv")
+
 ```
 
 # Plot results by species and site
@@ -123,8 +113,10 @@ monthorder <- c("January", "February","March", "April","May",
 chl$timepoint <- factor(chl$timepoint,levels=monthorder)
 chl$group <- paste0(chl$timepoint, "_", chl$site)
 
+chl <- chl %>% distinct(full_sample_id, .keep_all = TRUE)
+
 # Plot chlorophyll a
-chl %>%
+chl.a <- chl %>%
   ggplot(aes(x = timepoint, y = chla.ug.cm2, group=group, color=site)) +
   geom_boxplot(aes(group=group, color=site))+
   geom_jitter(width = 0.1) + # Plot all points
@@ -135,5 +127,33 @@ chl %>%
   labs(x = "", y = "chlorophyll a (µg/cm2)") +
   theme_bw()+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+chl.a
+
+chl.c2 <- chl %>%
+  ggplot(aes(x = timepoint, y = chla.ug.cm2, group=group, color=site)) +
+  geom_boxplot(aes(group=group, color=site))+
+  geom_jitter(width = 0.1) + # Plot all points
+  scale_color_manual(values=c("#E69F00", "#56B4E9")) +
+  #stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
+  #             geom = "errorbar", color = c("black"), width = 0.5) +
+  #stat_summary(fun.y = mean, geom = "point", color = "black")+           # Plot mean
+  labs(x = "", y = "chlorophyll a (µg/cm2)") +
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+chl.c2
+
+chl.plots <- grid.arrange(chl.a, chl.c2, nrow = 2)
+
+ggsave("output/Chl.pdf", chl.plots , width = 8, height = 6)
+ggsave("output/Chl.jpg", chl.plots , width = 8, height = 6)
+
+# write chlorophyll data to file
+chl %>%
+  select(full_sample_id, chla.ug.cm2, chlc2.ug.cm2) %>%
+  filter(!is.na(chla.ug.cm2))%>%
+  filter(!is.na(chlc2.ug.cm2))%>%
+  write_csv(path = "output/chlorophyll.csv")
 
 ```
