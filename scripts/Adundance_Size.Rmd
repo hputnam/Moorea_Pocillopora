@@ -172,3 +172,53 @@ ggsave("output/Gametogenesis_Size.jpg", size.plots , width = 10, height = 6)
 
 
 ```
+
+```{r}
+
+FR.size.means <- size.means %>%
+  filter(!site=="backreef")
+
+FR.Size.plot <- FR.size.means %>% 
+  filter(!is.na(gm)) %>%
+  ggplot(aes(x=month, y=gm, colour = sex, label=sex)) +
+  scale_x_discrete(limits = c("January","February", "March","April", "May","June", "July", "August", "September","October",  "November"))+
+  geom_point(aes(),size=2,position=position_dodge(width = 0.1))+
+  geom_errorbar(aes(ymin=gm-sem, ymax=gm+sem), width=.1,position=position_dodge(width = 0.1)) +
+  #geom_text(aes(label = n, y=10, size=2)) +
+  scale_color_manual(values = c("blue","coral1"))+
+  #facet_wrap("sex", ncol=1, scales = "free")+
+  theme_bw()+
+  ylab("Geometric Mean Diameter (µm)")+
+  theme(strip.text.x = element_text(size = 8, colour = "black"),axis.text.x = element_text(angle = 90), legend.position = "top", axis.title.x=element_blank())
+FR.Size.plot
+
+FR.male_df_relative_abundance <- male_df_relative_abundance %>%
+  filter(!site=="backreef")
+
+FR.Male <- FR.male_df_relative_abundance %>% ggplot(aes(x=replicate_id, y=freq, group=Stage, fill=Stage)) +
+  geom_col()+
+  scale_fill_manual(values = c("lightblue", "skyblue2", "dodgerblue3", "blue"))+
+  facet_wrap(c("month"), ncol=11)+
+  #facet_nested("site" * site ~ "month" * month)+
+  theme_bw()+
+  ylab("Proportion of Sperm")+
+  theme(strip.text.x = element_text(size = 8, colour = "black"),axis.text.x=element_blank(), legend.position = "top", axis.title.x=element_blank())
+FR.Male
+
+FR.female_df_relative_abundance <- female_df_relative_abundance %>%
+  filter(!site=="backreef")
+
+FR.Female <- FR.female_df_relative_abundance %>% ggplot(aes(x=replicate_id, y=freq, group=Stage, fill=Stage, label=site)) +
+  geom_col()+
+  scale_fill_manual(values = c("lightblue", "skyblue2", "dodgerblue3", "blue"))+
+  facet_wrap(c("month"), ncol=11)+
+  theme_bw()+
+  ylab("Proportion of Eggs")+
+  theme(strip.text.x = element_text(size = 8, colour = "black"),axis.text.x = element_text(angle = 90), legend.position = "none", axis.title.x=element_blank())
+FR.Female
+
+FR.gamete.plots <- grid.arrange(FR.Male, FR.Female, FR.Size.plot, nrow = 3)
+
+ggsave("output/ForeReef_Gametogenesis.pdf", FR.gamete.plots , width = 8, height =8)
+ggsave("output/ForeReef_Gametogenesis.jpg", FR.gamete.plots , width = 8, height = 8)
+```
