@@ -20,7 +20,6 @@ library(broom)
 # Import data
 ```{r}
 
-#THIS PART WORKS
 # Define function to read in pro data
 read_pro <- function(file) {
    prot_data <- read_csv(file, skip = 31, n_max = 31) %>%
@@ -30,14 +29,14 @@ read_pro <- function(file) {
     unite("well", c(row, col), sep = "")
 }
 
-#THIS PART WORKS
+
 # List protein data files
 prot_path = "data/protein/holobiont/"                                              # Path to prot data directory
 all_prot_files <- list.files(path = prot_path, pattern = "*.csv")          # List all files in directory
 prot_platemaps <- list.files(path = prot_path, pattern = "platemap")       # List platemap files
 prot_data_files <- setdiff(all_prot_files, prot_platemaps)                 # List data files
 
-#THIS PART THROWS AN ERROR "Error in `ensym()`:! Can't convert to a symbol."
+
 # Read in all files into tibble
 df <- tibble(file = prot_data_files) %>%
   mutate(platemap = map(file, ~ read_csv(paste0(prot_path, tools::file_path_sans_ext(.), "_platemap.csv"))),

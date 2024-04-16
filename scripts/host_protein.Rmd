@@ -19,18 +19,28 @@ library(broom)
 
 # Import data
 ```{r}
+
+# Define function to read in pro data
+read_pro <- function(file) {
+   prot_data <- read_csv(file, skip = 31, n_max = 31) %>%
+    magrittr::set_colnames(c("row", 1:12, "wavelength")) %>%
+    fill(row) %>%
+    gather("col", "absorbance", -wavelength, -row) %>%
+    unite("well", c(row, col), sep = "")
+}
+
+
 # List protein data files
 prot_path = "data/protein/host/"                                              # Path to prot data directory
 all_prot_files <- list.files(path = prot_path, pattern = "*.csv")          # List all files in directory
 prot_platemaps <- list.files(path = prot_path, pattern = "platemap")       # List platemap files
 prot_data_files <- setdiff(all_prot_files, prot_platemaps)                 # List data files
 
+
 # Read in all files into tibble
 df <- tibble(file = prot_data_files) %>%
-  separate(file, into = c("date", "plate", "partner"), remove = FALSE) %>%
-  unite(plate, date, plate, partner) %>%
-  mutate(platemap = map(plate, ~read_csv(paste0(prot_path, ., "_BCA_platemap.csv"))),
-         prot_data = map(file, ~read_csv(paste0(prot_path, .)) %>% rename(well = well)))
+  mutate(platemap = map(file, ~ read_csv(paste0(prot_path, tools::file_path_sans_ext(.), "_platemap.csv"))),
+         prot_data = map(file, ~ read_pro(paste0(prot_path, .))))
 
 # Merge platemap and data for each plate
 df <- df %>%
