@@ -1,0 +1,21 @@
+﻿Sample ID,Plate Well,Template Type,PCR Template Volume (µl),H20 Volume (µl),Primer Volume (µl),Primer Name,Original Sample ID,mtORF Result,PocHistone Result,Species,site,Slides.Processed
+HP0001,A1,PCR,2,8,2,FatP6.1,HISTO POC-466,Haplotype 1,P. meandrina,P. meandrina,backreef,no
+HP0009,A2,PCR,2,8,2,FatP6.1,HISTO POC-467,Haplotype 1,P. grandis,P. grandis,backreef,no
+HP0017,A3,PCR,2,8,2,FatP6.1,HISTO POC-468,Haplotype 1,P. meandrina,P. meandrina,backreef,no
+HP0025,A4,PCR,2,8,2,FatP6.1,HISTO POC-469,Haplotype 1,P. meandrina,P. meandrina,backreef,no
+HP0033,A5,PCR,2,8,2,FatP6.1,HISTO POC-470,Haplotype 10,NA,P. tuahiniensis,backreef,no
+HP0041,A6,PCR,2,8,2,FatP6.1,HISTO POC-471,Haplotype 10,NA,P. tuahiniensis,backreef,yes
+HP0049,A7,PCR,2,8,2,FatP6.1,HISTO POC-472,Haplotype 3,NA,P. verrucosa,backreef,yes
+HP0057,A8,PCR,2,8,2,FatP6.1,HISTO POC-473,Haplotype 10,NA,P. tuahiniensis,backreef,yes
+HP0065,A9,PCR,2,8,2,FatP6.1,HISTO POC-474,"Haplotype 2, Haplotype 11",NA,P. c.f. effusa,backreef,yes
+HP0073,A10,PCR,2,8,2,FatP6.1,HISTO POC-475,Haplotype 1,P. meandrina,P. meandrina,backreef,yes
+HP0081,A11,PCR,2,8,2,FatP6.1,HISTO POC-476,Haplotype 10,NA,P. tuahiniensis,forereef,no
+HP0089,A12,PCR,2,8,2,FatP6.1,HISTO POC-477,Haplotype 10,NA,P. tuahiniensis,forereef,yes
+HP0002,B1,PCR,2,8,2,FatP6.1,HISTO POC-478,Haplotype 10,NA,P. tuahiniensis,forereef,yes
+HP0010,B2,PCR,2,8,2,FatP6.1,HISTO POC-479,Haplotype 10,NA,P. tuahiniensis,forereef,yes
+HP0018,B3,PCR,2,8,2,FatP6.1,HISTO POC-480,Haplotype 10,NA,P. tuahiniensis,forereef,yes
+HP0026,B4,PCR,2,8,2,FatP6.1,HISTO POC-481,Haplotype 10,NA,P. tuahiniensis,forereef,yes
+HP0034,B5,PCR,2,8,2,FatP6.1,HISTO POC-482,Haplotype 10,NA,P. tuahiniensis,forereef,no
+HP0042,B6,PCR,2,8,2,FatP6.1,HISTO POC-483,Haplotype 10,NA,P. tuahiniensis,forereef,no
+HP0050,B7,PCR,2,8,2,FatP6.1,HISTO POC-484,Haplotype 10,NA,P. tuahiniensis,forereef,no
+HP0058,B8,PCR,2,8,2,FatP6.1,HISTO POC-485,Haplotype 10,NA,P. tuahiniensis,forereef,no
