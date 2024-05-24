@@ -1,0 +1,224 @@
+---
+title: "Gamete Abundance Analysis"
+author: "hputnam"
+date: "2024-04-01"
+output: html_document
+---
+
+This script will analyze gamete abundance over time. 
+## Load packages 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library("tidyverse")
+library("gridExtra")
+library("ggh4x")
+library("plotrix")
+
+```
+
+## Load data & select specific columns 
+```{r}
+Abundance <- read.csv("data/histology_data.csv", header = T, na.strings = c("", "NA"))
+
+### Format data from wide to long 
+Abundance_long <- pivot_longer(Abundance, cols = starts_with("Stage"), names_to = "Stage", values_to = "Value")
+
+df_relative_abundance <- Abundance_long %>%
+  group_by(sex, month, haplotype, Stage) %>%
+  summarise(tots = sum(Value)) %>%
+  group_by(sex, month, haplotype) %>%
+  mutate(grand.tots = sum(tots)) %>%
+  mutate(freq = tots/grand.tots) 
+
+#df_relative_abundance <- replace(df_relative_abundance, is.na(df_relative_abundance), 0)
+
+df_relative_abundance$month <- factor(df_relative_abundance$month, levels = c("January","February", "March","April", "May","June", "July", "August", "September","October",  "November"))
+
+df_relative_abundance$group <- paste0(df_relative_abundance$month,"_", df_relative_abundance$colony_id)
+
+df_relative_abundance$month <- factor(df_relative_abundance$month, levels = c("January","February", "March","April", "May","June", "July", "August", "September","October",  "November"))
+
+#df_relative_abundance$Stage <- factor(df_relative_abundance$Stage, levels = c("StageI","StageII","StageIII","StageIV"))
+
+my_tag <- c("", "", "", "", "", "", "", "", "", "", "",
+            "No Data", "", "", "", "", "", "", "", "", "", "")
+
+anno <- data.frame(x1 = 0.3,  y1 = 3, lab = "No Data")
+anno
+
+#egg <- bquote("\u2640")
+#sperm <- bquote("\u2642")
+
+```
+
+Male Gametes
+```{r}
+male_df_relative_abundance <- df_relative_abundance %>%
+  filter(!sex=="female")
+
+Male <- male_df_relative_abundance %>% ggplot(aes(x=month, y=freq, group=Stage, fill=Stage)) +
+  geom_col()+
+  scale_fill_manual(values = c("lightblue", "skyblue2", "dodgerblue3", "blue"))+
+  facet_wrap(c("haplotype"), ncol=11)+
+  #facet_nested( "haplotype" * haplotype)+
+  theme_bw()+
+  ylab("Proportion of Sperm")+
+  theme(strip.text.x = element_text(size = 8, colour = "black"),axis.text.x=element_blank(), legend.position = "top", axis.title.x=element_blank())
+Male
+# Male <-  tag_facet(Male, x = -Inf, y = -Inf, 
+#           vjust = -1, hjust = -0.25,
+#           open = "", close = "",
+#           fontface = 1,
+#           size = 3,
+#           family = "serif",
+#           tag_pool = my_tag)
+# 
+# Male
+```
+
+Female Gametes
+```{r}
+female_df_relative_abundance <- df_relative_abundance %>%
+  filter(!sex=="male")
+
+
+Female <- female_df_relative_abundance %>% ggplot(aes(x=month, y=freq, group=Stage, fill=Stage)) +
+  geom_col()+
+  scale_fill_manual(values = c("lightblue", "skyblue2", "dodgerblue3", "blue"))+
+  facet_wrap(c("haplotype"), ncol=11)+
+  theme_bw()+
+  ylab("Proportion of Eggs")+
+  theme(strip.text.x = element_text(size = 8, colour = "black"),axis.text.x = element_text(angle = 90), legend.position = "none", axis.title.x=element_blank())
+Female
+
+# Female <- tag_facet(Female, x = -Inf, y = -Inf, 
+#           vjust = -1, hjust = -0.25,
+#           open = "", close = "",
+#           fontface = 1,
+#           size = 3,
+#           family = "serif",
+#           tag_pool = my_tag)
+# Female
+```
+
+
+```{r}
+Size <- read.csv("data/histology_data_size.csv", header = T)
+
+Size$geo.mean <- sqrt(Size$length*Size$width)
+
+Size$geo.mean.vol <- pi*((Size$geo.mean/2)^2)
+
+Size <- Size %>% separate(coral.ID, c("colony_id", "date"), sep = "(?<=[0-9])-")
+
+size.means <- Size %>%
+  group_by(site, month, sex) %>%
+  summarise(gm = mean(geo.mean, na.rm=TRUE), 
+            sem = std.error(geo.mean, na.rm=TRUE),
+            n=n())
+
+size.means[size.means == "NaN"] <- NA
+
+size.means$month <- factor(size.means$month, levels = c("January","February", "March","April", "May","June", "July", "August", "September","October",  "November"))
+
+size.means$sex <- factor(size.means$sex, levels = c("male", "female"))
+
+vol.means <- Size %>%
+  group_by(site, month, sex) %>%
+  summarise(gm = mean(geo.mean.vol, na.rm=TRUE), 
+            sem = std.error(geo.mean.vol, na.rm=TRUE),
+            n=n())
+
+vol.means[vol.means == "NaN"] <- NA
+
+#vol.means$mm3 <- vol.means$gm/10^9
+
+vol.means$month <- factor(vol.means$month, levels = c("January","February", "March","April", "May","June", "July", "August", "September","October",  "November"))
+
+Size.plot <- size.means %>% 
+  filter(!is.na(gm)) %>%
+  ggplot(aes(x=month, y=gm, colour = site, label=site)) +
+  scale_x_discrete(limits = c("January","February", "March","April", "May","June", "July", "August", "September","October",  "November"))+
+  geom_point(aes(),size=2,position=position_dodge(width = 0.1))+
+  geom_errorbar(aes(ymin=gm-sem, ymax=gm+sem), width=.1,position=position_dodge(width = 0.1)) +
+  #geom_text(aes(label = n, y=10, size=2)) +
+  scale_color_manual(values = c("coral1",  "blue"))+
+  facet_wrap("sex", ncol=1, scales = "free")+
+  theme_bw()+
+  ylab("Geometric Mean Diameter (µm)")+
+  theme(strip.text.x = element_text(size = 8, colour = "black"),axis.text.x = element_text(angle = 90), legend.position = "top", axis.title.x=element_blank())
+Size.plot
+
+```
+
+Arrange and save plots
+```{r}
+
+stage.plots <- grid.arrange(Male, Female, nrow = 2)
+
+#https://stackoverflow.com/questions/36941197/overall-label-for-facets
+
+ggsave("output/Gametogenesis_Stage_species.pdf", stage.plots , width = 10, height = 8)
+ggsave("output/Gametogenesis_Stage_species.jpg", stage.plots , width = 10, height = 8)
+
+
+size.plots <- grid.arrange(Size.plot, nrow = 1)
+
+#https://stackoverflow.com/questions/36941197/overall-label-for-facets
+
+ggsave("output/Gametogenesis_Size.pdf", size.plots , width = 10, height = 6)
+ggsave("output/Gametogenesis_Size.jpg", size.plots , width = 10, height = 6)
+
+
+```
+
+```{r}
+
+FR.size.means <- size.means %>%
+  filter(!site=="backreef")
+
+FR.Size.plot <- FR.size.means %>% 
+  filter(!is.na(gm)) %>%
+  ggplot(aes(x=month, y=gm, colour = sex, label=sex)) +
+  scale_x_discrete(limits = c("January","February", "March","April", "May","June", "July", "August", "September","October",  "November"))+
+  geom_point(aes(),size=2,position=position_dodge(width = 0.1))+
+  geom_errorbar(aes(ymin=gm-sem, ymax=gm+sem), width=.1,position=position_dodge(width = 0.1)) +
+  #geom_text(aes(label = n, y=10, size=2)) +
+  scale_color_manual(values = c("blue","coral1"))+
+  #facet_wrap("sex", ncol=1, scales = "free")+
+  theme_bw()+
+  ylab("Geometric Mean Diameter (µm)")+
+  theme(strip.text.x = element_text(size = 8, colour = "black"),axis.text.x = element_text(angle = 90), legend.position = "top", axis.title.x=element_blank())
+FR.Size.plot
+
+FR.male_df_relative_abundance <- male_df_relative_abundance %>%
+  filter(!site=="backreef")
+
+FR.Male <- FR.male_df_relative_abundance %>% ggplot(aes(x=replicate_id, y=freq, group=Stage, fill=Stage)) +
+  geom_col()+
+  scale_fill_manual(values = c("lightblue", "skyblue2", "dodgerblue3", "blue"))+
+  facet_wrap(c("month"), ncol=11)+
+  #facet_nested("site" * site ~ "month" * month)+
+  theme_bw()+
+  ylab("Proportion of Sperm")+
+  theme(strip.text.x = element_text(size = 8, colour = "black"),axis.text.x=element_blank(), legend.position = "top", axis.title.x=element_blank())
+FR.Male
+
+FR.female_df_relative_abundance <- female_df_relative_abundance %>%
+  filter(!site=="backreef")
+
+FR.Female <- FR.female_df_relative_abundance %>% ggplot(aes(x=replicate_id, y=freq, group=Stage, fill=Stage, label=site)) +
+  geom_col()+
+  scale_fill_manual(values = c("lightblue", "skyblue2", "dodgerblue3", "blue"))+
+  facet_wrap(c("month"), ncol=11)+
+  theme_bw()+
+  ylab("Proportion of Eggs")+
+  theme(strip.text.x = element_text(size = 8, colour = "black"),axis.text.x = element_text(angle = 90), legend.position = "none", axis.title.x=element_blank())
+FR.Female
+
+FR.gamete.plots <- grid.arrange(FR.Male, FR.Female, FR.Size.plot, nrow = 3)
+
+ggsave("output/ForeReef_Gametogenesis.pdf", FR.gamete.plots , width = 8, height =8)
+ggsave("output/ForeReef_Gametogenesis.jpg", FR.gamete.plots , width = 8, height = 8)
+```
