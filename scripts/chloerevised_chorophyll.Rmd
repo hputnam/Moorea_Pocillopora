@@ -17,11 +17,19 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 ## install packages if you dont already have them
 if (!require("tidyverse")) install.packages("tidyverse")
 if (!require("plotrix")) install.packages("plotrix")
+install.packages(gridExtra)
+install.packages("car")
+install.packages("emmeans")
+
+
 
 # load packages
 library(plotrix)
 library(tidyverse)
 library(gridExtra)
+library(car)
+library(emmeans)
+
 
 ```
 
@@ -121,7 +129,6 @@ chl <- chl %>%
 # remove blanks and NAs
 chl <- filter(chl, !full_sample_id %in% c("NA", "BK"))
 
-
 # Check for duplicates after joining homogenate volume and surface area
 print("Checking duplicates after joining homogenate volume and surface area")
 print(chl %>% duplicated() %>% sum())
@@ -151,19 +158,14 @@ chl <- chl %>% distinct(full_sample_id, .keep_all = TRUE)
 print("Checking duplicates before plotting")
 print(chl %>% duplicated() %>% sum())
 
+
 #chl <- chl %>% distinct(full_sample_id, .keep_all = TRUE)
 ```
 
-# Run ANOVA for each parameter *** this is where I am currently working
-```{r}
-## Test for differences in salinity by treatment with two-way ANOVA
-res.aov <- aov(treatment ~ timepoint, data = carb.output)
-summary(res.aov)
-TukeyHSD(res.aov) # See if there is any differences between specific treatments 
-plot(res.aov, 1) # Check ANOVA assumptions of normality 
-leveneTest(Salinity ~ Treatment, data = carb.output) # Check ANOVA assumptions of homogenity of variance 
-```
 
+
+
+# Plot results by species and site
 ```{r}
 # Plot chlorophyll a
 chl.a <- chl %>%
@@ -206,6 +208,100 @@ chl %>%
   filter(!is.na(chlc2.ug.cm2))%>%
   write_csv(path = "../output/chlorophyll.csv")
 
+# Save the plots
+#ggsave(file.path(../output/, "Chl_updated.pdf"), chl.plots, width = 8, height = 6)
+#ggsave(file.path(output_dir, "Chl_updated.jpg"), chl.plots, width = 8, height = 6)
+
+ggsave("../output/Chl_updated.pdf", chl.plots, width = 35, height = 36, units = "in")
+ggsave("../output/Chl_updated.png", chl.plots, width = 35, height = 36, units = "in")
+```
+
+#Making ANOVA
+```{r}
+# Two-way ANOVA
+anova_result <- aov(chla.ug.cm2 ~ timepoint * site, data = chl)
+summary(anova_result)
+
+# Levene's Test for homogeneity of variances
+leveneTest(chla.ug.cm2 ~ timepoint * site, data = chl)
+
+# Post Hoc Test
+emmeans_result <- emmeans(anova_result, pairwise ~ timepoint * site)
+emmeans_result
+
+```
+
+
+# Outlier detection
+```{r}
+
+# Outlier detection
+#chl <- chl %>%
+  #filter(!is.na(chla.ug.cm2)) %>%
+  #mutate(zscore = (chla.ug.cm2 - mean(chla.ug.cm2)) / sd(chla.ug.cm2)) %>%
+  #filter(abs(zscore) < 3)
+
+#chla <- read.csv(‘~/Desktop/GITHUB/TLPR21_2/CHL/TLPR21_CHL_Results.csv’) %>%
+  #select(full_sample_id,	chla.ug.cm2)
+chl %>%
+  filter(!is.na(chla.ug.cm2)) %>%
+  mutate(zscore = (.$chla.ug.cm2 - mean(.$chla.ug.cm2))/sd(.$chla.ug.cm2)) %>%
+  filter(abs(zscore)<3) %>%
+  select(full_sample_id, chla.ug.cm2)
+
+
+```
+#Plotting again with hopefully outliers removed 
+
+```{r}
+# Plot results by species and site
+# Plot chlorophyll a
+chl.a <- chl %>%
+  ggplot(aes(x = timepoint, y = chla.ug.cm2, group=group, color=site)) +
+  geom_boxplot(aes(group=group, color=site), outlier.shape = NA)+
+  geom_jitter(width = 0.1, shape = 16) + # Plot all points with pch = 17
+  scale_color_manual(values=c("#E69F00", "#56B4E9")) +
+  #stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
+  #             geom = "errorbar", color = c("black"), width = 0.5) +
+  #stat_summary(fun.y = mean, geom = "point", color = "black")+           # Plot mean
+  labs(x = "", y = "chlorophyll a (µg/cm2)") +
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+chl.a
+
+chl.c2 <- chl %>%
+  ggplot(aes(x = timepoint, y = chla.ug.cm2, group=group, color=site)) +
+  geom_boxplot(aes(group=group, color=site), outlier.shape = NA)+
+  geom_jitter(width = 0.1, shape = 16) + # Plot all points with pch = 17
+  scale_color_manual(values=c("#E69F00", "#56B4E9")) +
+  #stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
+  #             geom = "errorbar", color = c("black"), width = 0.5) +
+  #stat_summary(fun.y = mean, geom = "point", color = "black")+           # Plot mean
+  labs(x = "", y = "chlorophyll a (µg/cm2)") +
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+chl.c2
+
+chl.plots <- grid.arrange(chl.a, chl.c2, nrow = 2)
+
+ggsave("../output/Chl.pdf", chl.plots , width = 8, height = 6)
+ggsave("../output/Chl.jpg", chl.plots , width = 8, height = 6)
+
+# write chlorophyll data to file
+chl %>%
+  select(full_sample_id, chla.ug.cm2, chlc2.ug.cm2) %>%
+  filter(!is.na(chla.ug.cm2))%>%
+  filter(!is.na(chlc2.ug.cm2))%>%
+  write_csv(path = "../output/chlorophyll.csv")
+
+# Save the plots
+#ggsave(file.path(../output/, "Chl_updated.pdf"), chl.plots, width = 8, height = 6)
+#ggsave(file.path(output_dir, "Chl_updated.jpg"), chl.plots, width = 8, height = 6)
+
+ggsave("../output/Chl_updated.pdf", chl.plots, width = 35, height = 36, units = "in")
+ggsave("../output/Chl_updated.png", chl.plots, width = 35, height = 36, units = "in")
 ```
 
 
