@@ -1,12 +1,18 @@
 ---
 title: "Chlorophyll analysis"
 author: "HM Putnam, AS Huffmyer"
-edited by: "DM Becker-Polinski"
-date: "20240410"
+edited by: "CME Gilligan"
+date: "20240604"
 output: html_document
 editor_options: 
   chunk_output_type: console
 ---
+
+
+```{r}
+install.packages("gridExtra")
+
+```
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
@@ -14,10 +20,19 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 ## install packages if you dont already have them
 if (!require("tidyverse")) install.packages("tidyverse")
 if (!require("plotrix")) install.packages("plotrix")
+install.packages(gridExtra)
+install.packages("car")
+install.packages("emmeans")
+
+
 
 # load packages
 library(plotrix)
 library(tidyverse)
+library(gridExtra)
+library(car)
+library(emmeans)
+
 
 ```
 
@@ -34,7 +49,7 @@ read_chl <- function(file) {
 }
 
 # List chlorophyll data files
-chl_path <- "data/chlorophyll/"                                        # Path to chlorophyll data directory
+chl_path <- "../data/chlorophyll/"                                        # Path to chlorophyll data directory
 all_chl_files <- list.files(path = chl_path, pattern = "*.csv")          # List all files in directory
 chl_platemaps <- list.files(path = chl_path, pattern = "platemap")       # List platemap files
 chl_data_files <- setdiff(all_chl_files, chl_platemaps)                  # List absorbance data files
@@ -44,9 +59,25 @@ df <- tibble(file = chl_data_files) %>%
   mutate(platemap = map(file, ~ read_csv(paste0(chl_path, tools::file_path_sans_ext(.), "_platemap.csv"))),
          chl_data = map(file, ~ read_chl(paste0(chl_path, .))))
 
+# Add a unique identifier to platemap and chl_data based on file name
+df <- df %>%
+  mutate(
+    platemap = map2(platemap, file, ~ mutate(.x, dataset_id = .y)),   # Change 1
+    chl_data = map2(chl_data, file, ~ mutate(.x, dataset_id = .y))    # Change 2
+  )
+
+# Check for duplicates after importing
+print("Checking duplicates after importing data")
+print(map(df$platemap, ~ .x %>% duplicated() %>% sum()))
+print(map(df$chl_data, ~ .x %>% duplicated() %>% sum()))
+
 # Merge platemap and data for each plate
 df <- df %>%
-  mutate(merged = map2(platemap, chl_data, ~ right_join(.x, .y)))
+  mutate(merged = map2(platemap, chl_data, ~ right_join(.x, .y, by = "dataset_id")))  # Change 3
+
+# Check for duplicates after merging
+print("Checking duplicates after merging platemap and data")
+print(df %>% unnest(merged) %>% duplicated() %>% sum())
 ```
 
 # Calculate chlorophyll concentrations
@@ -58,6 +89,10 @@ df <- df %>%
   group_by(file, full_sample_id, wavelength) %>%
   summarise(n = n(), mean_abs = mean(absorbance)) %>%
   spread(wavelength, mean_abs)
+
+# Check for duplicates after summarizing
+print("Checking duplicates after summarizing data")
+print(df %>% duplicated() %>% sum())
 
 # get the acetone blank 750 absorbace for each file (i.e., plate), and subtract from 630 and 663 values for each sample
 df <- df %>%
@@ -81,12 +116,12 @@ df <- df %>%
 # Normalize to surface area
 ```{r}
 # Load homogenate volume
-homog.vol <- read_csv("data/homogenate_vols.csv") %>%
+homog.vol <- read_csv("../data/homogenate_vols.csv") %>%
   select(full_sample_id, homog_vol_ml)
 chl <- full_join(df, homog.vol)
 
 # Load surface area
-sa <- read_csv("output/surface.area.calc.csv")
+sa <- read_csv("../output/surface.area.calc.csv")
 chl <- full_join(chl, sa)
 
 # Multiply chlorophyll by the homogenate volume and divide by surface area
@@ -97,29 +132,49 @@ chl <- chl %>%
 # remove blanks and NAs
 chl <- filter(chl, !full_sample_id %in% c("NA", "BK"))
 
+# Check for duplicates after joining homogenate volume and surface area
+print("Checking duplicates after joining homogenate volume and surface area")
+print(chl %>% duplicated() %>% sum())
 
 ```
+
 
 # Plot results by species and site
 ```{r, eval = TRUE}
 # Join with sample metadata
-meta <- read_csv("data/corals_sampled.csv")
+meta <- read_csv("../data/corals_sampled.csv")
 chl <- right_join(chl, meta, by = "full_sample_id")
+
+# Check for duplicates after joining metadata
+print("Checking duplicates after joining metadata")
+print(chl %>% duplicated() %>% sum())
 
 monthorder <- c("January", "February","March", "April","May",
                 "June",  "July", "August", "September", 
                 "October","November")
 
-chl$timepoint <- factor(chl$timepoint,levels=monthorder)
+chl$timepoint <- factor(chl$timepoint, levels=monthorder)
 chl$group <- paste0(chl$timepoint, "_", chl$site)
 
+# Remove duplicates before plotting
 chl <- chl %>% distinct(full_sample_id, .keep_all = TRUE)
+print("Checking duplicates before plotting")
+print(chl %>% duplicated() %>% sum())
 
+
+#chl <- chl %>% distinct(full_sample_id, .keep_all = TRUE)
+```
+
+
+
+
+# Plot results by species and site
+```{r}
 # Plot chlorophyll a
 chl.a <- chl %>%
   ggplot(aes(x = timepoint, y = chla.ug.cm2, group=group, color=site)) +
-  geom_boxplot(aes(group=group, color=site))+
-  geom_jitter(width = 0.1) + # Plot all points
+  geom_boxplot(aes(group=group, color=site), outlier.shape = NA)+
+  geom_jitter(width = 0.1, shape = 16) + # Plot all points with pch = 17
   scale_color_manual(values=c("#E69F00", "#56B4E9")) +
   #stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
   #             geom = "errorbar", color = c("black"), width = 0.5) +
@@ -132,8 +187,8 @@ chl.a
 
 chl.c2 <- chl %>%
   ggplot(aes(x = timepoint, y = chla.ug.cm2, group=group, color=site)) +
-  geom_boxplot(aes(group=group, color=site))+
-  geom_jitter(width = 0.1) + # Plot all points
+  geom_boxplot(aes(group=group, color=site), outlier.shape = NA)+
+  geom_jitter(width = 0.1, shape = 16) + # Plot all points with pch = 17
   scale_color_manual(values=c("#E69F00", "#56B4E9")) +
   #stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
   #             geom = "errorbar", color = c("black"), width = 0.5) +
@@ -146,16 +201,110 @@ chl.c2
 
 chl.plots <- grid.arrange(chl.a, chl.c2, nrow = 2)
 
-ggsave("output/Chl.pdf", chl.plots , width = 8, height = 6)
-ggsave("output/Chl.jpg", chl.plots , width = 8, height = 6)
+ggsave("../output/Chl.pdf", chl.plots , width = 8, height = 6)
+ggsave("../output/Chl.jpg", chl.plots , width = 8, height = 6)
 
 # write chlorophyll data to file
 chl %>%
   select(full_sample_id, chla.ug.cm2, chlc2.ug.cm2) %>%
   filter(!is.na(chla.ug.cm2))%>%
   filter(!is.na(chlc2.ug.cm2))%>%
-  write_csv(path = "output/chlorophyll.csv")
+  write_csv(path = "../output/chlorophyll.csv")
 
+# Save the plots
+#ggsave(file.path(../output/, "Chl_updated.pdf"), chl.plots, width = 8, height = 6)
+#ggsave(file.path(output_dir, "Chl_updated.jpg"), chl.plots, width = 8, height = 6)
+
+ggsave("../output/Chl_updated.pdf", chl.plots, width = 35, height = 36, units = "in")
+ggsave("../output/Chl_updated.png", chl.plots, width = 35, height = 36, units = "in")
+```
+
+#Making ANOVA
+```{r}
+# Two-way ANOVA
+anova_result <- aov(chla.ug.cm2 ~ timepoint * site, data = chl)
+summary(anova_result)
+
+# Levene's Test for homogeneity of variances
+leveneTest(chla.ug.cm2 ~ timepoint * site, data = chl)
+
+# Post Hoc Test
+emmeans_result <- emmeans(anova_result, pairwise ~ timepoint * site)
+emmeans_result
+
+```
+
+
+# Outlier detection
+```{r}
+
+# Outlier detection
+#chl <- chl %>%
+  #filter(!is.na(chla.ug.cm2)) %>%
+  #mutate(zscore = (chla.ug.cm2 - mean(chla.ug.cm2)) / sd(chla.ug.cm2)) %>%
+  #filter(abs(zscore) < 3)
+
+#chla <- read.csv(‘~/Desktop/GITHUB/TLPR21_2/CHL/TLPR21_CHL_Results.csv’) %>%
+  #select(full_sample_id,	chla.ug.cm2)
+chl %>%
+  filter(!is.na(chla.ug.cm2)) %>%
+  mutate(zscore = (.$chla.ug.cm2 - mean(.$chla.ug.cm2))/sd(.$chla.ug.cm2)) %>%
+  filter(abs(zscore)<3) %>%
+  select(full_sample_id, chla.ug.cm2)
+
+
+```
+#Plotting again with hopefully outliers removed 
+
+```{r}
+# Plot results by species and site
+# Plot chlorophyll a
+chl.a <- chl %>%
+  ggplot(aes(x = timepoint, y = chla.ug.cm2, group=group, color=site)) +
+  geom_boxplot(aes(group=group, color=site), outlier.shape = NA)+
+  geom_jitter(width = 0.1, shape = 16) + # Plot all points with pch = 17
+  scale_color_manual(values=c("#E69F00", "#56B4E9")) +
+  #stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
+  #             geom = "errorbar", color = c("black"), width = 0.5) +
+  #stat_summary(fun.y = mean, geom = "point", color = "black")+           # Plot mean
+  labs(x = "", y = "chlorophyll a (µg/cm2)") +
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+chl.a
+
+chl.c2 <- chl %>%
+  ggplot(aes(x = timepoint, y = chla.ug.cm2, group=group, color=site)) +
+  geom_boxplot(aes(group=group, color=site), outlier.shape = NA)+
+  geom_jitter(width = 0.1, shape = 16) + # Plot all points with pch = 17
+  scale_color_manual(values=c("#E69F00", "#56B4E9")) +
+  #stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
+  #             geom = "errorbar", color = c("black"), width = 0.5) +
+  #stat_summary(fun.y = mean, geom = "point", color = "black")+           # Plot mean
+  labs(x = "", y = "chlorophyll a (µg/cm2)") +
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+chl.c2
+
+chl.plots <- grid.arrange(chl.a, chl.c2, nrow = 2)
+
+ggsave("../output/Chl.pdf", chl.plots , width = 8, height = 6)
+ggsave("../output/Chl.jpg", chl.plots , width = 8, height = 6)
+
+# write chlorophyll data to file
+chl %>%
+  select(full_sample_id, chla.ug.cm2, chlc2.ug.cm2) %>%
+  filter(!is.na(chla.ug.cm2))%>%
+  filter(!is.na(chlc2.ug.cm2))%>%
+  write_csv(path = "../output/chlorophyll.csv")
+
+# Save the plots
+#ggsave(file.path(../output/, "Chl_updated.pdf"), chl.plots, width = 8, height = 6)
+#ggsave(file.path(output_dir, "Chl_updated.jpg"), chl.plots, width = 8, height = 6)
+
+ggsave("../output/Chl_updated.pdf", chl.plots, width = 35, height = 36, units = "in")
+ggsave("../output/Chl_updated.png", chl.plots, width = 35, height = 36, units = "in")
 ```
 
 
