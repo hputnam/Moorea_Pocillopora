@@ -166,8 +166,6 @@ print(chl %>% duplicated() %>% sum())
 ```
 
 
-
-
 # Plot results by species and site
 ```{r}
 # Plot chlorophyll a
@@ -254,8 +252,8 @@ chl %>%
 
 
 ```
-#Plotting again with hopefully outliers removed 
 
+# Plotting again with outliers removed 
 ```{r}
 # Plot results by species and site
 # Plot chlorophyll a
