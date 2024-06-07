@@ -23,14 +23,14 @@ library(gridExtra)
 
 ```{r }
 #Read in biomass data
-Data <- read.csv("data/biomass_data.csv")
+Data <- read.csv("../data/biomass_data.csv")
 #Data <- na.omit(Data)
 
 #Load tissue homogenate volume
-homog_vol <- read.csv("data/homogenate_vols.csv", header=TRUE)
+homog_vol <- read.csv("../data/homogenate_vols.csv", header=TRUE)
 
 # Load Surface area data
-sa <- read_csv("output/surface.area.calc.csv")
+sa <- read_csv("../output/surface.area.calc.csv")
 
 # Coral sample metadata
 metadata <- read_csv("data/corals_sampled.csv")
