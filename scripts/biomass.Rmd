@@ -33,7 +33,7 @@ homog_vol <- read.csv("../data/homogenate_vols.csv", header=TRUE)
 sa <- read_csv("../output/surface.area.calc.csv")
 
 # Coral sample metadata
-metadata <- read_csv("data/corals_sampled.csv")
+metadata <- read_csv("../data/corals_sampled.csv")
 
 # Join homogenate volumes and surface area with sample metadata
 Data <- metadata %>% left_join(homog_vol %>% select(full_sample_id,homog_vol_ml)) %>%
@@ -65,6 +65,13 @@ Data <- Data %>%
 
 ```
 
+#Export data spreadsheet
+```{r}
+# Export the processed data to a CSV file on the desktop
+write.csv(Data, file = "~/Desktop/processed_biomass_data.csv", row.names = FALSE)
+```
+
+
 
 ```{r}
 #summarize Dry Biomass mean and sem 
@@ -78,12 +85,12 @@ Data$group <- paste0(Data$timepoint, "_", Data$site)
 
 Data<-Data[!is.na(Data$partner),]#remove rows that are not identified for species and site
 
-write.csv(Data, "/Users/hputnam/Desktop/junk.csv")
+#write.csv(Data, "/Users/hputnam/Desktop/junk.csv")
  
 # Plot 
 DW <- Data %>%
   ggplot(aes(x = timepoint, y = DW.mg.cm2, group=group, color=site)) +
-  geom_boxplot(aes(group=group, color=site))+
+  geom_boxplot(aes(group=group, color=site), outlier.shape = NA)+
   geom_jitter(width = 0.1) + # Plot all points
   scale_color_manual(values=c("#E69F00", "#56B4E9")) +
   #stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
@@ -98,7 +105,7 @@ DW
 
 AFDW <- Data %>%
   ggplot(aes(x = timepoint, y = AFDW.mg.cm2, group=group, color=site)) +
-  geom_boxplot(aes(group=group, color=site))+
+  geom_boxplot(aes(group=group, color=site), outlier.shape = NA)+
   geom_jitter(width = 0.1) + # Plot all points
   scale_color_manual(values=c("#E69F00", "#56B4E9")) +
   #stat_summary(fun.data = mean_cl_normal, fun.args = list(mult = 1),    # Plot standard error
@@ -113,10 +120,10 @@ AFDW
 
 biomass.plots <- grid.arrange(DW, AFDW, nrow = 2)
 
+
 ggsave("output/Biomass.pdf", biomass.plots , width = 8, height = 6)
 ggsave("output/Biomass.jpg", biomass.plots , width = 8, height = 6)
 
 ```
-
 
  
