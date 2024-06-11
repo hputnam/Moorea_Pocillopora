@@ -230,6 +230,10 @@ leveneTest(chla.ug.cm2 ~ timepoint * site, data = chl)
 emmeans_result <- emmeans(anova_result, pairwise ~ timepoint * site)
 emmeans_result
 
+# Perform Outlier Test using outlierTest
+outlier_results <- outlierTest(anova_result)
+print(outlier_results)
+
 ```
 
 
@@ -305,4 +309,8 @@ ggsave("../output/Chl_updated.pdf", chl.plots, width = 35, height = 36, units = 
 ggsave("../output/Chl_updated.png", chl.plots, width = 35, height = 36, units = "in")
 ```
 
+#Trying outlier test
+```{r}
+
+```
 
